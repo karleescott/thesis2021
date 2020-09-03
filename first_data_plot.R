@@ -1,8 +1,13 @@
 library(tidyverse)
-data <- read.csv("C:/Users/Karlee Scott/OneDrive - West Point/AY 21-1/Thesis/states_2020-07-13-00.csv")
+data <- read.csv("/data/ADSB/Opensky/states_2020-07-13-00.csv")
 data <- na.omit(data)
+View(data)
 data1 <- data %>%
   filter(icao24 == "00d170")
+data2 <- data %>%
+  filter(icao24 == "e80450" || icao24 == "00d170")
+
+
 
 library("ggplot2")
 
