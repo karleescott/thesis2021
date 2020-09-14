@@ -1,4 +1,5 @@
 library(tidyverse)
+library(spatstat)
 usdata <- read.csv("/lfs/karlee_combined_data.csv")
 usdata1 <- usdata %>%
   filter(time == 1594598410)
