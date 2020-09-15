@@ -16,6 +16,24 @@ plot(P)
 #(1986, page 48, eqn (3.31))) unless the quartiles coincide when a positive result will be guaranteed.
 plot(density(P, bw = "nrd0", kernel = "gaussian"), main = "Intensity Plot", xlab = "Longitude (degrees)", ylab = "Latitude (degrees)")
 
+library(rgdal)
+library(raster)
+library(rgeos)
+# unzip the file
+
+unzip(zipfile = "C:/Users/Karlee Scott/OneDrive - West Point/AY 21-1/Thesis/states_21basic.zip", 
+      exdir = 'states_21basic')
+
+# load the data 
+map <- readOGR("states_21basic/states.shp")
+
+plot(map)
+summary(map)
+
+out <- crop(map, extent(-125, -65, 25, 50))
+plot(out)
+
+
 #https://www.r-graph-gallery.com/2d-density-plot-with-ggplot2.html
 intplot1 <- ggplot(usdata1, aes(x=lon, y=lat)) +
 #default gaussian with bandwidth.nrd(x) "rule of thumb"   
