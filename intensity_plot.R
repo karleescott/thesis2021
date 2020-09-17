@@ -1,5 +1,5 @@
 library(tidyverse)
-library(spatstat)
+library(spatstat) 
 
 usdata <- read.csv("/lfs/karlee_combined_data.csv")
 usdata1 <- usdata %>%
