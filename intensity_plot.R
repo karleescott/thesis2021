@@ -33,7 +33,7 @@ unzip(zipfile = "thesis2021/states_21basic.zip",
       exdir = 'states_21basic')
 
 # load the data 
-map <- readOGR("states_21basic/states.shp")
+map <- readOGR("states_21basic/states.shp")https://jupyter.wpcdas.com/user/karlee_scott/rstudio/graphics/plot_zoom_png?width=1200&height=900
 
 plot(map)
 summary(map)
@@ -41,4 +41,20 @@ summary(map)
 out <- crop(map, extent(-125, -65, 25, 50))
 plot(out, add = TRUE)
 
+par(mar = c(5.1, 4.1, 4.1, 7))
 
+#https://stackoverflow.com/questions/16201906/how-can-i-get-the-value-of-a-kernel-density-estimate-at-specific-points
+library(MASS)
+plotdata <- kde2d(usdata1$lon,usdata1$lat, n = 1813)
+image(plotdata,
+      main = "Intensity Plot", 
+      xlab = "Longitude (degrees)", 
+      ylab = "Latitude (degrees)")
+plot(out, add = TRUE)
+
+#http://search.r-project.org/library/plotfunctions/html/gradientLegend.html
+library(plotfunctions)
+gradientLegend(valRange = c(min(plotdata$z), max(plotdata$z)), color = hcl.colors(12, "YlOrRd", rev = TRUE), inside = FALSE, n.seg = 5)
+
+sum(plotdata$z)
+               
