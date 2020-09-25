@@ -56,5 +56,25 @@ plot(out, add = TRUE)
 library(plotfunctions)
 gradientLegend(valRange = c(min(plotdata$z), max(plotdata$z)), color = hcl.colors(12, "YlOrRd", rev = TRUE), inside = FALSE, n.seg = 5)
 
-sum(plotdata$z)
-               
+
+gaus <- function(x, x1) {
+  w <- (1/(2*pi*(var(x))^2))*exp(-(x1^2)/(2*(var(x)^2)))
+  return(w)
+}
+
+fun <- function(x,y,x1,y1) {
+  r <- quantile(x, c(0.25, 0.75))
+  h <- (r[2] - r[1])/1.34
+  hx <- 4 * 1.06 * min(sqrt(var(x)), h) * length(x)^(-1/5)
+  
+  r1 <- quantile(y, c(0.25, 0.75))
+  h1 <- (r1[2] - r1[1])/1.34
+  hy <- 4 * 1.06 * min(sqrt(var(y)), h1) * length(y)^(-1/5)   
+
+  z <- (1/(hx*hy*length(x)))*sum(gaus(x,(x1-x)/hx)*gaus(y,(y1-y)/hy))
+  return(z)
+}
+
+fun(usdata1$lon,usdata1$lat,-68.40028,25.44140)
+View(plotdata[['z']])
+kde2d
