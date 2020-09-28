@@ -45,18 +45,34 @@ lim_t <- range(usdata$time)
 #https://stackoverflow.com/questions/46017812/r-get-all-categories-in-column
 categories <- unique(usdata$time) 
 
+  
 gen_anim <- function() {
+  vector <- integer(0)
   for(temps in categories){ # for each time point
     par(mar = c(5.1, 4.1, 4.1, 7))
     tmax_sub <- usdata %>%
       filter(time == temps)
-    plotdata <- kde2d(tmax_sub$lon,tmax_sub$lat, n = 500)
-    image(plotdata,
-          main = "Intensity Plot", 
-          xlab = "Longitude (degrees)", 
-          ylab = "Latitude (degrees)")
-    plot(out, add = TRUE)
-    gradientLegend(valRange = c(min(plotdata$z), max(plotdata$z)), color = hcl.colors(12, "YlOrRd", rev = TRUE), inside = FALSE, n.seg = 5) # plot data at this time point
+    
+    r1 <- quantile(tmax_sub$lon, c(0.25, 0.75))
+    h1 <- (r1[2] - r1[1])/1.34
+    hx <- 4 * 1.06 * min(sqrt(var(tmax_sub$lon)), h1) * length(tmax_sub$lon)^(-1/5)
+   
+    r2 <- quantile(tmax_sub$lat, c(0.25, 0.75))
+    h2 <- (r2[2] - r2[1])/1.34
+    hy <- 4 * 1.06 * min(sqrt(var(tmax_sub$lat)), h2) * length(tmax_sub$lat)^(-1/5)
+    
+    if(hx > 0 & hy > 0) {
+      plotdata <- kde2d(tmax_sub$lon,tmax_sub$lat, n = 500)
+      image(plotdata,
+            main = "Intensity Plot", 
+            xlab = "Longitude (degrees)", 
+            ylab = "Latitude (degrees)")
+      plot(out, add = TRUE)
+      gradientLegend(valRange = c(min(plotdata$z), max(plotdata$z)), color = hcl.colors(12, "YlOrRd", rev = TRUE), inside = FALSE, n.seg = 5) # plot data at this time point
+      } else {
+        vector <- c(vector, temps)
+      }
+  print(vector)
   }
 }
 
