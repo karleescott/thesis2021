@@ -1,6 +1,10 @@
 library(tidyverse)
 
 usdata <- read.csv("/lfs/karlee_combined_data.csv")
+firstdata <- read.csv("/data/ADSB/OpenSky/states_2020-07-13-00.csv")
+firstdata <- na.omit(firstdata)
+firstdata <- firstdata %>%
+  filter(lon >= -125 & lon <= -65 & lat >= 25 & lat <= 50)
 
 usdata1 <- usdata %>%
   filter(time == 1594598410)
@@ -44,13 +48,13 @@ library("animation")
 lim_t <- range(usdata$time)
 #https://stackoverflow.com/questions/46017812/r-get-all-categories-in-column
 categories <- unique(usdata$time) 
-
+categories <- unique(firstdata$time) 
   
 gen_anim <- function() {
   vector <- integer(0)
   for(temps in categories){ # for each time point
     par(mar = c(5.1, 4.1, 4.1, 7))
-    tmax_sub <- usdata %>%
+    tmax_sub <- firstdata %>%
       filter(time == temps)
     
     r1 <- quantile(tmax_sub$lon, c(0.25, 0.75))
@@ -66,14 +70,16 @@ gen_anim <- function() {
       image(plotdata,
             main = "Intensity Plot", 
             xlab = "Longitude (degrees)", 
-            ylab = "Latitude (degrees)")
+            ylab = "Latitude (degrees)",
+            xlim = c(-125,-65),
+            ylim = c(25,50))
       plot(out, add = TRUE)
       gradientLegend(valRange = c(min(plotdata$z), max(plotdata$z)), color = hcl.colors(12, "YlOrRd", rev = TRUE), inside = FALSE, n.seg = 5) # plot data at this time point
       } else {
         vector <- c(vector, temps)
       }
-  print(vector)
   }
+  print(vector)
 }
 
 ani.options(interval = 0.2) # 0.2s interval between frames
