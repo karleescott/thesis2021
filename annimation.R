@@ -74,7 +74,7 @@ gen_anim <- function() {
             xlim = c(-125,-65),
             ylim = c(25,50))
       plot(out, add = TRUE)
-      gradientLegend(valRange = c(min(plotdata$z), max(plotdata$z)), color = hcl.colors(12, "YlOrRd", rev = TRUE), inside = FALSE, n.seg = 5) # plot data at this time point
+      gradientLegend(valRange = c(0,.004), color = hcl.colors(12, "YlOrRd", rev = TRUE), inside = FALSE, n.seg = 5) # plot data at this time point
       } else {
         vector <- c(vector, temps)
       }
