@@ -11,6 +11,11 @@ startusdata <- usdata %>%
   arrange(time)
 View(startusdata)
 
+firstdata <- read.csv("/data/ADSB/OpenSky/states_2020-07-13-00.csv")
+firstdata <- na.omit(firstdata)
+firstdata <- firstdata %>%
+  filter(lon >= -125 & lon <= -65 & lat >= 25 & lat <= 50)
+
 # unzip the zipfile
 unzip(zipfile = "thesis2021/states_21basic.zip", 
       exdir = 'states_21basic')
@@ -26,8 +31,12 @@ View(conversion)
 
 library(ggplot2)
 
-
+#flights that started at t = 0
 ggplot(startusdata, aes(lon, lat, color=icao24)) +  
-  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, -65) + ylim(25, 50) + geom_path() + geom_path(data = conversion, 
-                                                                                                                                                aes(x = long, y = lat, group = group),
-                                                                                                                                                color = 'black', fill = 'white', size = .2)
+  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, -65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
+#flights that occurred in the first hour
+ggplot(firstdata, aes(lon, lat, color=icao24)) +  
+  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, -65) + ylim(25, 50) + geom_path() +
+  theme(legend.position="none") + geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
