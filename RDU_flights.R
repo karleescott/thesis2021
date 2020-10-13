@@ -14,14 +14,27 @@ firstdata <- firstdata %>%
 
 #finds list of ids that pass through RDU (1 degree buffer)
 list = c()
+i = 1
 for (row in 1:nrow(firstdata)){
-  if(firstdata[[row,4]] > (-78.7880 - 1) & firstdata[[row,4]] < (-78.7880 + 1) & firstdata[[row,3]] < (35.8801 + 1) & firstdata[[row,3]] > (35.8801 - 1)) {
-    list[row] = as.character(firstdata[[row,2]])
+  if(firstdata[row,4] > (-78.7880 - 1) & firstdata[row,4] < (-78.7880 + 1) & firstdata[row,3] < (35.8801 + 1) & firstdata[row,3] > (35.8801 - 1)) {
+    list[i] <- as.character(firstdata[row,2])
+    i <- i + 1
+  }
+}
+
+res <- c()
+i = 1
+for (j in list){ 
+  if (j %in% res){ 
+  }
+  else{
+    res[i] <- j
+    i <- i + 1
   }
 }
 
 firstdata1 <- firstdata %>%
-  filter(icao24 %in% list)
+  filter(icao24 %in% res)
 
 # unzip the zipfile
 unzip(zipfile = "thesis2021/states_21basic.zip", 
@@ -39,10 +52,6 @@ ggplot(firstdata1, aes(lon, lat, color=icao24)) +
   ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + theme(legend.position="none") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
-firstdata1 <- firstdata1 %>%
-  arrange(time)
-View(firstdata1)
-
 #distance from RDU
 distance <- c()
 for(row in 1:nrow(firstdata1)){
@@ -51,32 +60,61 @@ for(row in 1:nrow(firstdata1)){
 
 firstdata1 <- cbind(firstdata1, distance)
 
+#find start time based on smallest distance from RDU
 start <- data.frame()
 i = 1
-for(j in list){
+for(j in res){
   data <- firstdata1 %>%
   filter(icao24 == j)
   mindistance <- min(data$distance)
   data <- data %>%
-    filter(data$distance == mindistance)
+    filter(distance == mindistance)
   start[i,1] <- j
   start[i,2] <- data$time
   i <- i + 1
 }
 
 #add start time to firstdata1
+firstdata1 <- firstdata1 %>%
+  arrange(icao24)
+
+start <- start %>%
+  arrange(V1)
+
 st <- c()
+i = 1
 for(r in 1:nrow(firstdata1)){
-  id <- firstdata1[r,2]
-  for(q in 1:nrow(start)){
-    if(start[q,1] == id){
-      st[r] <- start[q,2]
-    }
+  if(as.character(firstdata1[r,2]) == start[i,1]){
+    st[r] <- start[i,2]
+  }
+  else{
+    i <- i + 1
   }
 }
-View(start)
+
+firstdata1 <- cbind(firstdata1, st)
 
 #remove all times prior to start time
+#if the plane takes more than one route through the area, this approach might delete previous routes
+newdata <- firstdata1 %>%
+  filter(time>=st)
 
-#iterate through and change times to start at 1
+#change times to start at 1
+newdata <- newdata %>%
+  arrange(icao24, time)
 
+tz <- c(1)
+i = 1
+for(r in 2:nrow(newdata)){
+  if(newdata[r-1,2] == newdata[r,2]){
+    i <- i + 1
+    tz[r] <- i
+  }
+  else{
+    i = 1
+    tz[r] <- i
+  }
+}
+
+newdata <- cbind(newdata, tz)
+View(newdata)
