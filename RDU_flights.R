@@ -4,24 +4,30 @@ library(raster)
 library(rgeos)
 library(ggplot2)
 
-usdata <- read.csv("/lfs/karlee_combined_data.csv")
-View(usdata)
-
 firstdata <- read.csv("/data/ADSB/OpenSky/states_2020-07-13-00.csv")
 firstdata <- na.omit(firstdata)
 firstdata <- firstdata %>%
   filter(lon >= -125 & lon <= -65 & lat >= 25 & lat <= 50)
 
-#finds list of ids that pass through RDU (1 degree buffer)
+#distance from RDU
+distance <- c()
+for(row in 1:nrow(firstdata)){
+  distance[row] <- sqrt((firstdata[row,4]-(-78.7880))^2 + (firstdata[row,3]-(35.8801))^2)
+}
+
+firstdata1 <- cbind(firstdata, distance)
+
+#find ids that pass through RDU (1 degree buffer)
 list = c()
 i = 1
-for (row in 1:nrow(firstdata)){
-  if(firstdata[row,4] > (-78.7880 - 1) & firstdata[row,4] < (-78.7880 + 1) & firstdata[row,3] < (35.8801 + 1) & firstdata[row,3] > (35.8801 - 1)) {
-    list[i] <- as.character(firstdata[row,2])
+for (row in 1:nrow(firstdata1)){
+  if(firstdata1[row,17] <= 1) {
+    list[i] <- as.character(firstdata1[row,2])
     i <- i + 1
   }
 }
 
+#remove repeat ids
 res <- c()
 i = 1
 for (j in list){ 
@@ -33,7 +39,7 @@ for (j in list){
   }
 }
 
-firstdata1 <- firstdata %>%
+firstdata1 <- firstdata1 %>%
   filter(icao24 %in% res)
 
 # unzip the zipfile
@@ -52,14 +58,6 @@ ggplot(firstdata1, aes(lon, lat, color=icao24)) +
   ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + theme(legend.position="none") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
-#distance from RDU
-distance <- c()
-for(row in 1:nrow(firstdata1)){
-  distance[row] <- sqrt((firstdata[row,4]-(-78.7880))^2 + (firstdata[row,3]-(35.8801))^2)
-}
-
-firstdata1 <- cbind(firstdata1, distance)
-
 #find start time based on smallest distance from RDU
 start <- data.frame()
 i = 1
@@ -68,9 +66,10 @@ for(j in res){
   filter(icao24 == j)
   mindistance <- min(data$distance)
   data <- data %>%
-    filter(distance == mindistance)
+    filter(distance == mindistance) %>%
+    arrange(time)
   start[i,1] <- j
-  start[i,2] <- data$time
+  start[i,2] <- data[1,1]
   i <- i + 1
 }
 
