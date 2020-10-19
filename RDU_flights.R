@@ -117,3 +117,54 @@ for(r in 2:nrow(newdata)){
 
 newdata <- cbind(newdata, tz)
 View(newdata)
+
+
+# finds the average distance from res[1] to each of the other ids
+res <- sort(res)
+
+avdis <- c()
+
+res1data <- newdata %>%
+  filter(icao24 == res[1])
+view(res1data)
+
+for (i in 2:length(res)){
+  dis <- c()
+  k <- 0
+  data <- newdata %>%
+    filter(icao24 == res[i])
+  for (j in 1:min(nrow(data),nrow(res1data))){
+    eudis <- sqrt((res1data[j,3]-data[j,3])^2+(res1data[j,4]-data[j,4])^2)
+    dis[j] <- eudis
+    k <- k + 1
+  }
+  avdis[i-1] <- sum(dis)/k
+}
+
+avdistance <- cbind(res[2:length(res)],avdis)
+View(avdistance)
+
+#find id with the smallest average distance from res[1]'s path
+smallestdis <- as.numeric(min(avdistance[,2]))
+
+for (i in 1:nrow(avdistance)){
+  if (avdistance[i,2] == smallestdis){
+    close <- (avdistance[i,1])
+  }
+}
+
+res2data <- newdata %>%
+  filter(icao24 == close)
+
+closestpath <- rbind(res1data,res2data)
+
+#graph to confirm
+ggplot(closestpath, aes(lon, lat, color=icao24)) +  
+  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
+ggplot(newdata, aes(lon, lat, color=icao24)) +  
+  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + theme(legend.position="none") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
+#potential problems: planes aren't moving
