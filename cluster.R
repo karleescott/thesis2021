@@ -90,6 +90,7 @@ for(r in 1:nrow(firstdata1)){
   }
   else{
     i <- i + 1
+    st[r] <- start[i,2]
   }
 }
 
@@ -122,27 +123,64 @@ newdata <- cbind(newdata, tz)
 #assign 1, 2, 3 group
 groups <- c(rep(1,28),rep(2,28),rep(3,28))
 fundata <- data.frame(res,groups)
+newdata <- newdata %>%
+  arrange(icao24)
+fundata <- fundata %>%
+  arrange(res)
 
 group <- c()
 i = 1
 for(r in 1:nrow(newdata)){
-  if(newdata[r,2] == fundata[i,1]){
+  if(as.character(newdata[r,2]) == as.character(fundata[i,1])){
     group[r] <- fundata[i,2]
   }
   else{
     i <- i + 1
+    group[r] <- fundata[i,2]
   }
 }
 
 newdata <- cbind(newdata, group)
 
 #create mean functions
-group1 <- firstdata1 %>%
-  filter(group==1)
-fun1 <- c()
-for(i in 1:max()
+group1 <- newdata %>%
+  filter(group == 1)
+group2 <- newdata %>%
+  filter(group == 2)
+group3 <- newdata %>%
+  filter(group == 3)
+fun1 <- data.frame()
+fun2 <- data.frame()
+fun3 <- data.frame()
 
-group2 <- firstdata1 %>%
-  filter(group==2)
-group3 <- firstdata1 %>%
-  filter(group==3)
+for(i in 1:max(group1$tz)){
+  data <- group1 %>%
+    filter(tz == i)
+  fun1[i,1] <- i
+  fun1[i,2] <- mean(data$lon)
+  fun1[i,3] <- mean(data$lat)
+  colnames(fun1) = c("tz", "lon", "lat")
+}
+
+for(i in 1:max(group2$tz)){
+  data <- group2 %>%
+    filter(tz == i)
+  fun2[i,1] <- i
+  fun2[i,2] <- mean(data$lon)
+  fun2[i,3] <- mean(data$lat)
+  colnames(fun2) = c("tz", "lon", "lat")
+}
+
+for(i in 1:max(group3$tz)){
+  data <- group3 %>%
+    filter(tz == i)
+  fun3[i,1] <- i
+  fun3[i,2] <- mean(data$lon)
+  fun3[i,3] <- mean(data$lat)
+  colnames(fun3) = c("tz", "lon", "lat")
+}
+
+#find average distance to each mean function
+#change group to smallest average distance
+#continue until groups are not changing
+

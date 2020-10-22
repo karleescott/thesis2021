@@ -88,6 +88,7 @@ for(r in 1:nrow(firstdata1)){
   }
   else{
     i <- i + 1
+    st[r] <- start[i,2]
   }
 }
 
