@@ -181,6 +181,31 @@ for(i in 1:max(group3$tz)){
 }
 
 #find average distance to each mean function
+avdisfun <- data.frame()
+for(i in 1:length(res)){
+  dis1 <- c()
+  dis2 <- c()
+  dis3 <- c()
+  data <- newdata %>%
+    filter(icao24 == res[i])
+  for(j in 1:min(nrow(data),nrow(fun1))){
+    eudis <- sqrt((fun1[j,2]-data[j,4])^2+(fun1[j,3]-data[j,3])^2)
+    dis1[j] <- eudis
+  }
+  for(j in 1:min(nrow(data),nrow(fun2))){
+    eudis <- sqrt((fun2[j,2]-data[j,4])^2+(fun2[j,3]-data[j,3])^2)
+    dis2[j] <- eudis
+  }
+  for(j in 1:min(nrow(data),nrow(fun3))){
+    eudis <- sqrt((fun3[j,2]-data[j,4])^2+(fun3[j,3]-data[j,3])^2)
+    dis3[j] <- eudis
+  }
+  avdisfun[i,1] <- res[i]
+  avdisfun[i,2] <- sum(dis1)/length(dis1)
+  avdisfun[i,3] <- sum(dis1)/length(dis1)
+  avdisfun[i,4] <- sum(dis1)/length(dis1)
+}
+col.names(avdisfun) <- c("icao24", "fun1", "fun2", "fun3")
 #change group to smallest average distance
 #continue until groups are not changing
 
