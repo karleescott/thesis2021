@@ -202,10 +202,11 @@ for(i in 1:length(res)){
   }
   avdisfun[i,1] <- res[i]
   avdisfun[i,2] <- sum(dis1)/length(dis1)
-  avdisfun[i,3] <- sum(dis1)/length(dis1)
-  avdisfun[i,4] <- sum(dis1)/length(dis1)
+  avdisfun[i,3] <- sum(dis2)/length(dis2)
+  avdisfun[i,4] <- sum(dis3)/length(dis3)
 }
-col.names(avdisfun) <- c("icao24", "fun1", "fun2", "fun3")
+colnames(avdisfun) <- c("icao24", "fun1", "fun2", "fun3")
+View(avdisfun)
 #change group to smallest average distance
 #continue until groups are not changing
-
+plot(x = fun1$lon, y = fun1$lat)
