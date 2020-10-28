@@ -187,7 +187,7 @@ for(i in 1:length(res)){
   dis2 <- c()
   dis3 <- c()
   data <- newdata %>%
-    filter(icao24 == res[i])
+  filter(icao24 == res[i])
   for(j in 1:min(nrow(data),nrow(fun1))){
     eudis <- sqrt((fun1[j,2]-data[j,4])^2+(fun1[j,3]-data[j,3])^2)
     dis1[j] <- eudis
@@ -204,9 +204,133 @@ for(i in 1:length(res)){
   avdisfun[i,2] <- sum(dis1)/length(dis1)
   avdisfun[i,3] <- sum(dis2)/length(dis2)
   avdisfun[i,4] <- sum(dis3)/length(dis3)
-}
+ }
 colnames(avdisfun) <- c("icao24", "fun1", "fun2", "fun3")
 View(avdisfun)
+
+
 #change group to smallest average distance
+newgroup <- c()
+k <- 1
+for(i in 1:length(res)){
+  data <- newdata %>%
+    filter(icao24 == res[i])
+  for(j in 1:nrow(data)){
+    if(avdisfun[i,2] >= avdisfun[i,3] & avdisfun[i,2] >= avdisfun[i,4]){
+      newgroup[k] <- 1
+      k <- k + 1
+    }
+    else if(avdisfun[i,3] >= avdisfun[i,2] & avdisfun[i,3] >= avdisfun[i,4]){
+      newgroup[k] <- 2
+      k <- k + 1
+    }
+    else{
+      newgroup[k] <- 3
+      k <- k + 1
+    }
+  }
+}
+group <- newdata$group
+newdata <- cbind(newdata, newgroup)
+newdata <- subset(newdata, select = -c(group))
+names(newdata)[names(newdata) == "newgroup"] <- "group"
+
 #continue until groups are not changing
-plot(x = fun1$lon, y = fun1$lat)
+#function
+clustermaker <- function(newdata, res) {
+#make mean functions
+  group1 <- newdata %>%
+    filter(group == 1)
+  group2 <- newdata %>%
+    filter(group == 2)
+  group3 <- newdata %>%
+    filter(group == 3)
+  fun1 <- data.frame()
+  fun2 <- data.frame()
+  fun3 <- data.frame()
+
+  for(i in 1:max(group1$tz)){
+    data <- group1 %>%
+      filter(tz == i)
+    fun1[i,1] <- i
+    fun1[i,2] <- mean(data$lon)
+    fun1[i,3] <- mean(data$lat)
+    colnames(fun1) = c("tz", "lon", "lat")
+  }
+
+  for(i in 1:max(group2$tz)){
+    data <- group2 %>%
+      filter(tz == i)
+    fun2[i,1] <- i
+    fun2[i,2] <- mean(data$lon)
+    fun2[i,3] <- mean(data$lat)
+    colnames(fun2) = c("tz", "lon", "lat")
+  }
+
+  for(i in 1:max(group3$tz)){
+    data <- group3 %>%
+      filter(tz == i)
+    fun3[i,1] <- i
+    fun3[i,2] <- mean(data$lon)
+    fun3[i,3] <- mean(data$lat)
+    colnames(fun3) = c("tz", "lon", "lat")
+  }
+
+#find average distance from each function
+  avdisfun <- data.frame()
+  for(i in 1:length(res)){
+    dis1 <- c()
+    dis2 <- c()
+    dis3 <- c()
+    data <- newdata %>%
+      filter(icao24 == res[i])
+    for(j in 1:min(nrow(data),nrow(fun1))){
+      eudis <- sqrt((fun1[j,2]-data[j,4])^2+(fun1[j,3]-data[j,3])^2)
+      dis1[j] <- eudis
+    }
+    for(j in 1:min(nrow(data),nrow(fun2))){
+      eudis <- sqrt((fun2[j,2]-data[j,4])^2+(fun2[j,3]-data[j,3])^2)
+      dis2[j] <- eudis
+    }
+    for(j in 1:min(nrow(data),nrow(fun3))){
+      eudis <- sqrt((fun3[j,2]-data[j,4])^2+(fun3[j,3]-data[j,3])^2)
+      dis3[j] <- eudis
+    }
+    avdisfun[i,1] <- res[i]
+    avdisfun[i,2] <- sum(dis1)/length(dis1)
+    avdisfun[i,3] <- sum(dis2)/length(dis2)
+    avdisfun[i,4] <- sum(dis3)/length(dis3)
+  }
+  colnames(avdisfun) <- c("icao24", "fun1", "fun2", "fun3")
+  return(avdisfun)
+}
+
+while (identical(unlist(group), unlist(newgroup)) == FALSE) {
+  avdisfun <- clustermaker(newdata, res)
+  View(avdisfun)
+  #change group to closest mean function
+  newgroup <- c()
+  k <- 1
+  for(i in 1:length(res)){
+    data <- newdata %>%
+      filter(icao24 == res[i])
+    for(j in 1:nrow(data)){
+      if(avdisfun[i,2] >= avdisfun[i,3] && avdisfun[i,2] >= avdisfun[i,4]){
+        newgroup[k] <- 1
+        k <- k + 1
+      }
+      else if(avdisfun[i,3] >= avdisfun[i,2] && avdisfun[i,3] >= avdisfun[i,4]){
+        newgroup[k] <- 2
+        k <- k + 1
+      }
+      else{
+        newgroup[k] <- 3
+        k <- k + 1
+      }
+    }
+  }
+  group <- newdata$group
+  newdata <- cbind(newdata, newgroup)
+  newdata <- subset(newdata, select = -c(group))
+  names(newdata)[names(newdata) == "newgroup"] <- "group"
+}
