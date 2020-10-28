@@ -41,6 +41,7 @@ for (j in list){
   }
 }
 
+res <- sort(res)
 firstdata1 <- firstdata1 %>%
   filter(icao24 %in% res)
 
@@ -234,11 +235,12 @@ group <- newdata$group
 newdata <- cbind(newdata, newgroup)
 newdata <- subset(newdata, select = -c(group))
 names(newdata)[names(newdata) == "newgroup"] <- "group"
+identical(unlist(group), unlist(newgroup))
 
 #continue until groups are not changing
-#function
-clustermaker <- function(newdata, res) {
-#make mean functions
+
+while (identical(unlist(group), unlist(newgroup)) == FALSE) {
+  #create mean functions
   group1 <- newdata %>%
     filter(group == 1)
   group2 <- newdata %>%
@@ -248,7 +250,7 @@ clustermaker <- function(newdata, res) {
   fun1 <- data.frame()
   fun2 <- data.frame()
   fun3 <- data.frame()
-
+  
   for(i in 1:max(group1$tz)){
     data <- group1 %>%
       filter(tz == i)
@@ -257,7 +259,7 @@ clustermaker <- function(newdata, res) {
     fun1[i,3] <- mean(data$lat)
     colnames(fun1) = c("tz", "lon", "lat")
   }
-
+  
   for(i in 1:max(group2$tz)){
     data <- group2 %>%
       filter(tz == i)
@@ -266,7 +268,7 @@ clustermaker <- function(newdata, res) {
     fun2[i,3] <- mean(data$lat)
     colnames(fun2) = c("tz", "lon", "lat")
   }
-
+  
   for(i in 1:max(group3$tz)){
     data <- group3 %>%
       filter(tz == i)
@@ -275,8 +277,8 @@ clustermaker <- function(newdata, res) {
     fun3[i,3] <- mean(data$lat)
     colnames(fun3) = c("tz", "lon", "lat")
   }
-
-#find average distance from each function
+  
+  #find average distance to each mean function
   avdisfun <- data.frame()
   for(i in 1:length(res)){
     dis1 <- c()
@@ -302,24 +304,21 @@ clustermaker <- function(newdata, res) {
     avdisfun[i,4] <- sum(dis3)/length(dis3)
   }
   colnames(avdisfun) <- c("icao24", "fun1", "fun2", "fun3")
-  return(avdisfun)
-}
-
-while (identical(unlist(group), unlist(newgroup)) == FALSE) {
-  avdisfun <- clustermaker(newdata, res)
   View(avdisfun)
-  #change group to closest mean function
+  
+  
+  #change group to smallest average distance
   newgroup <- c()
   k <- 1
   for(i in 1:length(res)){
     data <- newdata %>%
       filter(icao24 == res[i])
     for(j in 1:nrow(data)){
-      if(avdisfun[i,2] >= avdisfun[i,3] && avdisfun[i,2] >= avdisfun[i,4]){
+      if(avdisfun[i,2] >= avdisfun[i,3] & avdisfun[i,2] >= avdisfun[i,4]){
         newgroup[k] <- 1
         k <- k + 1
       }
-      else if(avdisfun[i,3] >= avdisfun[i,2] && avdisfun[i,3] >= avdisfun[i,4]){
+      else if(avdisfun[i,3] >= avdisfun[i,2] & avdisfun[i,3] >= avdisfun[i,4]){
         newgroup[k] <- 2
         k <- k + 1
       }
@@ -334,3 +333,9 @@ while (identical(unlist(group), unlist(newgroup)) == FALSE) {
   newdata <- subset(newdata, select = -c(group))
   names(newdata)[names(newdata) == "newgroup"] <- "group"
 }
+
+plot(x = fun1$lon, y = fun1$lat)
+plot(x = fun2$lon, y = fun2$lat)
+
+groupings <- cbind(group, newgroup)
+View(groupings)
