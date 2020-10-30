@@ -122,7 +122,7 @@ for(r in 2:nrow(newdata)){
 newdata <- cbind(newdata, tz)
 
 #assign 1, 2, 3 group
-groups <- c(rep(1,28),rep(2,28),rep(3,28))
+groups <- c(rep(1,42),rep(2,42))
 fundata <- data.frame(res,groups)
 newdata <- newdata %>%
   arrange(icao24)
@@ -207,8 +207,6 @@ for(i in 1:length(res)){
   avdisfun[i,4] <- sum(dis3)/length(dis3)
  }
 colnames(avdisfun) <- c("icao24", "fun1", "fun2", "fun3")
-View(avdisfun)
-
 
 #change group to smallest average distance
 newgroup <- c()
@@ -237,10 +235,16 @@ newdata <- subset(newdata, select = -c(group))
 names(newdata)[names(newdata) == "newgroup"] <- "group"
 identical(unlist(group), unlist(newgroup))
 
-ggplot(fun1, aes(lon, lat)) +  geom_line(data = fun2, aes(lon, lat), color = "blue") + geom_line(data = fun3, aes(lon, lat), color = "red") +
+ggplot(fun1, aes(lon, lat)) +  geom_line(data = fun2, aes(lon, lat), color = "blue") +
   ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + theme(legend.position="none") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
+data1 <- newdata %>%
+  filter(group == 1)
+
+ggplot(data1, aes(lon, lat, color=icao24)) +  
+  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + theme(legend.position="none") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
 #continue until groups are not changing
 
