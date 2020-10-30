@@ -237,10 +237,14 @@ newdata <- subset(newdata, select = -c(group))
 names(newdata)[names(newdata) == "newgroup"] <- "group"
 identical(unlist(group), unlist(newgroup))
 
+ggplot(fun1, aes(lon, lat)) +  geom_line(data = fun2, aes(lon, lat), color = "blue") + geom_line(data = fun3, aes(lon, lat), color = "red") +
+  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + theme(legend.position="none") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
+
 #continue until groups are not changing
 
 while (identical(unlist(group), unlist(newgroup)) == FALSE) {
-  #create mean functions
   group1 <- newdata %>%
     filter(group == 1)
   group2 <- newdata %>%
@@ -304,7 +308,6 @@ while (identical(unlist(group), unlist(newgroup)) == FALSE) {
     avdisfun[i,4] <- sum(dis3)/length(dis3)
   }
   colnames(avdisfun) <- c("icao24", "fun1", "fun2", "fun3")
-  View(avdisfun)
   
   
   #change group to smallest average distance
@@ -332,10 +335,6 @@ while (identical(unlist(group), unlist(newgroup)) == FALSE) {
   newdata <- cbind(newdata, newgroup)
   newdata <- subset(newdata, select = -c(group))
   names(newdata)[names(newdata) == "newgroup"] <- "group"
+  identical(unlist(group), unlist(newgroup))
+
 }
-
-plot(x = fun1$lon, y = fun1$lat)
-plot(x = fun2$lon, y = fun2$lat)
-
-groupings <- cbind(group, newgroup)
-View(groupings)
