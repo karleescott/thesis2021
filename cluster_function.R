@@ -161,7 +161,7 @@ makeCluster <- function(data, numclusters) {
   }
   colnames(fun) = c("group", "tz", "lon", "lat")
   
-  #find distance at each time from each mean function
+  #find distance between each path and the mean functions at every tz
   colLoc = len(data)
   for (r in 1:nrow(data)){
     for (n in numclusters){
@@ -208,7 +208,7 @@ makeCluster <- function(data, numclusters) {
   }
   colnames(likelihoods) <- c("icao24", "cluster", "likelihood")
   
-  #select which function has highest likelihood for each
+  #select which function has highest likelihood for each path
   highli <-data.frame()
   for(i in 1:len(res)){
     data1 <- likelihood %>%
