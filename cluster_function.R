@@ -14,15 +14,18 @@ makeData <- function(data, numclusters){
   data <- data %>%
     filter(lon >= -125 & lon <= -65 & lat >= 25 & lat <= 50)
   data <- cbind(data$time,as.character(data$icao24),data$lon,data$lat)
+  data <- data.frame(data)
   colnames(data) <- c("time", "icao24", "lon", "lat")
+
+  print(as.numeric(data[1,3]))
   #distance from RDU
   distance <- c()
   for(row in 1:nrow(data)){
-    distance[row] <- sqrt((as.numeric(data[row,3])-(-78.7880))^2 + (as.numeric(data[row,4])-(35.8801))^2)
+    distance[row] <- sqrt((data[row,3]-(-78.7880))^2 + (data[row,4]-(35.8801))^2)
   }
   
   data <- cbind(data, distance)
-  
+
   #find ids that pass through RDU (1 degree buffer)
   list = c()
   i = 1
@@ -50,6 +53,7 @@ makeData <- function(data, numclusters){
     filter(icao24 %in% res)
   
   #find start time based on smallest distance from RDU
+  print(res)
   start <- data.frame()
   i = 1
   for(j in res){
@@ -65,6 +69,7 @@ makeData <- function(data, numclusters){
   }
   
   #add start time to firstdata1
+  
   data <- data %>%
     arrange(icao24)
   
