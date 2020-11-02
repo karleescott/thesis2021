@@ -4,19 +4,21 @@ library(raster)
 library(rgeos)
 library(ggplot2)
 
-makeCluster <- function(data, numclusters) {
+firstdata <- read.csv("/data/ADSB/OpenSky/states_2020-07-13-00.csv")
+
+makeData <- function(data, numclusters){ 
   #filter data
   data <- na.omit(data)
   data <- data %>%
     filter(onground == "False")
   data <- data %>%
     filter(lon >= -125 & lon <= -65 & lat >= 25 & lat <= 50)
-  
-  
+  data <- cbind(data$time,as.character(data$icao24),data$lon,data$lat)
+  colnames(data) <- c("time", "icao24", "lon", "lat")
   #distance from RDU
   distance <- c()
   for(row in 1:nrow(data)){
-    distance[row] <- sqrt((data[row,4]-(-78.7880))^2 + (data[row,3]-(35.8801))^2)
+    distance[row] <- sqrt((as.numeric(data[row,3])-(-78.7880))^2 + (as.numeric(data[row,4])-(35.8801))^2)
   }
   
   data <- cbind(data, distance)
@@ -25,8 +27,8 @@ makeCluster <- function(data, numclusters) {
   list = c()
   i = 1
   for (row in 1:nrow(data)){
-    if(data[row,distance] <= 1) {
-      list[i] <- as.character(data[row,icao24])
+    if(data[row,5] <= 1) {
+      list[i] <- as.character(data[row,2])
       i <- i + 1
     }
   }
@@ -72,7 +74,7 @@ makeCluster <- function(data, numclusters) {
   st <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(as.character(data[r,icao24]) == start[i,1]){
+    if(as.character(data[r,1]) == start[i,1]){
       st[r] <- start[i,2]
     }
     else{
@@ -95,7 +97,7 @@ makeCluster <- function(data, numclusters) {
   tz <- c(1)
   i = 1
   for(r in 2:nrow(data)){
-    if(data[r-1,icao24] == data[r,icao24]){
+    if(data[r-1,1] == data[r,1]){
       i <- i + 1
       tz[r] <- i
     }
@@ -111,15 +113,15 @@ makeCluster <- function(data, numclusters) {
   groups <- c()
   l = 1
   for (n in 1:len(res)){
-      groups[n,1] <- res[n]
-      groups[n,2] <- l
-      if(l == numclusters){
-        l <- 1
-      }
-      else{
-        l <- l + 1
-      }
+    groups[n,1] <- res[n]
+    groups[n,2] <- l
+    if(l == numclusters){
+      l <- 1
     }
+    else{
+      l <- l + 1
+    }
+  }
   colnames(groups) = c("res", "group")
   data <- data %>%
     arrange(icao24)
@@ -129,17 +131,21 @@ makeCluster <- function(data, numclusters) {
   group <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(as.character(data[r,icao24]) == as.character(fundata[i,res])){
-      group[r] <- fundata[i,group]
+    if(as.character(data[r,1]) == as.character(fundata[i,1])){
+      group[r] <- fundata[i,2]
     }
     else{
       i <- i + 1
-      group[r] <- fundata[i,group]
+      group[r] <- fundata[i,2]
     }
   }
   
   data <- cbind(data, group)
-  
+  return(data)
+}
+
+
+makeCluster <- function(data, numclusters) {
   #create mean functions
   fun <- data.frame()
   data <- data %>%
@@ -162,12 +168,11 @@ makeCluster <- function(data, numclusters) {
   colnames(fun) = c("group", "tz", "lon", "lat")
   
   #find distance between each path and the mean functions at every tz
-  colLoc = len(data)
   for (r in 1:nrow(data)){
     for (n in numclusters){
       data1 <- fun %>%
         filter(group == n, tz == data[r,tz])
-      data[r,len(data)+1] <- sqrt((data[r,lon]-data1[1,lon])^2 + (data[r,lat]-data1[1,lat])^2)
+      data[r,8+n] <- sqrt((data[r,2]-data1[1,3])^2 + (data[r,3]-data1[1,4])^2)
     }  
   }
   
@@ -177,9 +182,9 @@ makeCluster <- function(data, numclusters) {
     for(n in 1:numclusters)
       data1 <- data %>%
         filter(icao24 == res[i])
-      avdis[i,1] <- res[i]
-      avdis[i,2] <- n
-      avdis[i,3] <- mean(data1[,colLoc+n])
+    avdis[i,1] <- res[i]
+    avdis[i,2] <- n
+    avdis[i,3] <- mean(data1[,8+n])
   }
   colnames(avdis) <- c("icao24", "cluster", "avdis")
   
@@ -214,15 +219,35 @@ makeCluster <- function(data, numclusters) {
     data1 <- likelihood %>%
       filter(icao24 == res[i])
     highli[i,1] <- res[i]
-    hili <- max(data1[,likelihood])
+    hili <- max(data1[,3])
     for(n in 1:numclusters){
-      if(data1[n,likelihood] == hili)
+      if(data1[n,3] == hili)
         highli[i,2] <- n 
     }
   }
   colnames(highli) <- c("icao24", "newgroup")
   
   #change group to newgroup
-  #find new mean functions
-  #repeat until ids remain in the same clusters
+  data <- data %>%
+    arrange(icao24)
+  
+  highli <- highli %>%
+    arrange(icao24)
+  
+  group <- c()
+  i = 1
+  for(r in 1:nrow(data)){
+    if(as.character(data[r,1]) == highli[i,1]){
+      group[r] <- highli[i,2]
+    }
+    else{
+      i <- i + 1
+      group[r] <- highli[i,2]
+    }
+  }
+  
+  data[,8] <- group
+  return(data)
 }
+
+data <- makeData(firstdata,2)
