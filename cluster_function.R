@@ -16,16 +16,15 @@ makeData <- function(data, numclusters){
   data <- cbind(data$time,as.character(data$icao24),data$lon,data$lat)
   data <- data.frame(data)
   colnames(data) <- c("time", "icao24", "lon", "lat")
-
-  print(as.numeric(data[1,3]))
+  
   #distance from RDU
   distance <- c()
   for(row in 1:nrow(data)){
-    distance[row] <- sqrt((data[row,3]-(-78.7880))^2 + (data[row,4]-(35.8801))^2)
+    distance[row] <- sqrt((as.numeric(as.character(data[row,3]))-(-78.7880))^2 + (as.numeric(as.character(data[row,4]))-(35.8801))^2)
   }
   
   data <- cbind(data, distance)
-
+  
   #find ids that pass through RDU (1 degree buffer)
   list = c()
   i = 1
@@ -53,7 +52,6 @@ makeData <- function(data, numclusters){
     filter(icao24 %in% res)
   
   #find start time based on smallest distance from RDU
-  print(res)
   start <- data.frame()
   i = 1
   for(j in res){
@@ -68,30 +66,29 @@ makeData <- function(data, numclusters){
     i <- i + 1
   }
   
-  #add start time to firstdata1
-  
+  #add start time to data
   data <- data %>%
     arrange(icao24)
-  
   start <- start %>%
     arrange(V1)
   
   st <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(as.character(data[r,1]) == start[i,1]){
-      st[r] <- start[i,2]
+    if(as.character(data[r,2]) == as.character(start[i,1])){
+      st[r] <- as.numeric(as.character(start[i,2]))
     }
     else{
       i <- i + 1
-      st[r] <- start[i,2]
+      st[r] <- as.numeric(as.character(start[i,2]))
     }
   }
   
   data <- cbind(data, st)
-  
+
   #remove all times prior to start time
   #if the plane takes more than one route through the area, this approach might delete previous routes
+  data[,1] <- as.numeric(as.character(data[,1]))
   data <- data %>%
     filter(time>=st)
   
@@ -102,7 +99,7 @@ makeData <- function(data, numclusters){
   tz <- c(1)
   i = 1
   for(r in 2:nrow(data)){
-    if(data[r-1,1] == data[r,1]){
+    if(as.character(data[r-1,2]) == as.character(data[r,2])){
       i <- i + 1
       tz[r] <- i
     }
@@ -111,13 +108,12 @@ makeData <- function(data, numclusters){
       tz[r] <- i
     }
   }
-  
   data <- cbind(data, tz)
-  
+ 
   #assign initial random group
-  groups <- c()
+  groups <- data.frame()
   l = 1
-  for (n in 1:len(res)){
+  for (n in 1:length(res)){
     groups[n,1] <- res[n]
     groups[n,2] <- l
     if(l == numclusters){
@@ -136,7 +132,7 @@ makeData <- function(data, numclusters){
   group <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(as.character(data[r,1]) == as.character(fundata[i,1])){
+    if(as.character(data[r,2]) == as.character(fundata[i,1])){
       group[r] <- fundata[i,2]
     }
     else{
@@ -160,9 +156,10 @@ makeCluster <- function(data, numclusters) {
     data1 <- data %>%
       filter(group == n)
     for(i in 1:max(data1$tz)){
-      fun <- data.frame()
       data2 <- data1 %>%
         filter(tz == i)
+      data2[,3] <- as.numeric(as.character(data2[,3]))
+      data2[,4] <- as.numeric(as.character(data2[,4]))
       fun[i + j,1] <- n
       fun[i + j,2] <- i
       fun[i + j,3] <- mean(data2$lon)
@@ -172,16 +169,17 @@ makeCluster <- function(data, numclusters) {
   }
   colnames(fun) = c("group", "tz", "lon", "lat")
   
-  #find distance between each path and the mean functions at every tz
+  #find distance between each point and the mean functions at every tz (functions are different lengths?)
   for (r in 1:nrow(data)){
     for (n in numclusters){
       data1 <- fun %>%
-        filter(group == n, tz == data[r,tz])
-      data[r,8+n] <- sqrt((data[r,2]-data1[1,3])^2 + (data[r,3]-data1[1,4])^2)
+        filter(group == n & tz == as.numeric(as.character(data[r,tz])))
+      data[r,8+n] <- sqrt(as.numeric(as.character(data[r,2]))-as.numeric(as.character(data1[1,3]))^2 + (as.numeric(as.character(data[r,3]))-as.numeric(as.character(data1[1,4])))^2)
     }  
   }
   
   #find average distance from each mean function
+  data[,2] <- as.character(data[,2])
   avdis <- data.frame()
   for(i in 1:len(res)){
     for(n in 1:numclusters)
@@ -242,7 +240,7 @@ makeCluster <- function(data, numclusters) {
   group <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(as.character(data[r,1]) == highli[i,1]){
+    if(as.character(data[r,2]) == highli[i,1]){
       group[r] <- highli[i,2]
     }
     else{
@@ -256,3 +254,6 @@ makeCluster <- function(data, numclusters) {
 }
 
 data <- makeData(firstdata,2)
+View(data)
+
+data <- makeCluster(data,2)
