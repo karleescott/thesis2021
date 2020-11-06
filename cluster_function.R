@@ -171,23 +171,31 @@ makeCluster <- function(data, numclusters) {
   
   #find distance between each point and the mean functions at every tz (functions are different lengths?)
   for (r in 1:nrow(data)){
-    for (n in numclusters){
+    for (n in 1:numclusters){
       data1 <- fun %>%
-        filter(group == n & tz == as.numeric(as.character(data[r,tz])))
-      data[r,8+n] <- sqrt(as.numeric(as.character(data[r,2]))-as.numeric(as.character(data1[1,3]))^2 + (as.numeric(as.character(data[r,3]))-as.numeric(as.character(data1[1,4])))^2)
+        filter(group == n)
+      if(max(data1$tz) < data[r,7]){
+        data[r,8+n] <- "NA"
+      }
+      else{
+        data2 <- data1 %>%
+          filter(tz == data[r,7])
+        data[r,8+n] <- sqrt((as.numeric(as.character(data[r,3]))-as.numeric(as.character(data2[1,3])))^2 + (as.numeric(as.character(data[r,4]))-as.numeric(as.character(data2[1,4])))^2)
+      }
     }  
   }
-  
-  #find average distance from each mean function
+  View(data)
+  #find average distance from each mean function (need to define res)
   data[,2] <- as.character(data[,2])
   avdis <- data.frame()
-  for(i in 1:len(res)){
-    for(n in 1:numclusters)
+  for(i in 1:length(res)){
+    for(n in 1:numclusters){
       data1 <- data %>%
         filter(icao24 == res[i])
-    avdis[i,1] <- res[i]
-    avdis[i,2] <- n
-    avdis[i,3] <- mean(data1[,8+n])
+      avdis[i,1] <- res[i]
+      avdis[i,2] <- n
+      avdis[i,3] <- mean(data1[,8+n])
+    }
   }
   colnames(avdis) <- c("icao24", "cluster", "avdis")
   
@@ -203,7 +211,7 @@ makeCluster <- function(data, numclusters) {
   
   #find likelihoods
   likelihoods <- data.frame()
-  for (i in 1:len(res)){
+  for (i in 1:length(res)){
     for (n in 1:numclusters){
       data1 <- avdis %>%
         filter(icao24 == res[i] & cluster == n)
@@ -218,7 +226,7 @@ makeCluster <- function(data, numclusters) {
   
   #select which function has highest likelihood for each path
   highli <-data.frame()
-  for(i in 1:len(res)){
+  for(i in 1:length(res)){
     data1 <- likelihood %>%
       filter(icao24 == res[i])
     highli[i,1] <- res[i]
@@ -253,7 +261,30 @@ makeCluster <- function(data, numclusters) {
   return(data)
 }
 
-data <- makeData(firstdata,2)
+data <- makeData(firstdata,3)
 View(data)
 
-data <- makeCluster(data,2)
+# unzip the zipfile
+unzip(zipfile = "thesis2021/states_21basic.zip", 
+      exdir = 'states_21basic')
+
+# load the shapefile 
+map <- readOGR("states_21basic/states.shp")
+
+#crop the portion needed
+out <- crop(map, extent(-125, -65, 25, 50))
+
+conversion <- fortify(out)
+
+data[,3] <- as.numeric(as.character(data[,3]))
+data[,4] <- as.numeric(as.character(data[,4]))
+ggplot(data, aes(lon, lat, color= factor(group))) +  
+  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
+data1 <- makeCluster(data,2)
+
+ggplot(data1, aes(lon, lat, color= factor(group))) +  
+  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
