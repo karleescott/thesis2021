@@ -142,6 +142,9 @@ makeData <- function(data, numclusters){
   }
   
   data <- cbind(data, group)
+  data[,2] <- as.character(data[,2])
+  data[,3] <- as.numeric(as.character(data[,3]))
+  data[,4] <- as.numeric(as.character(data[,4]))
   return(data)
 }
 
@@ -184,21 +187,39 @@ makeCluster <- function(data, numclusters) {
       }
     }  
   }
-  View(data)
+ 
+  #re-define res
+  list <- data[,2]
+  res <- c()
+  i = 1
+  for (j in list){ 
+    if (j %in% res){ 
+    }
+    else{
+      res[i] <- j
+      i <- i + 1
+    }
+  }
+  
+  res <- sort(res)
+  
   #find average distance from each mean function (need to define res)
-  data[,2] <- as.character(data[,2])
   avdis <- data.frame()
+  j <- 1
   for(i in 1:length(res)){
+    data1 <- data %>%
+      filter(icao24 == res[i])
     for(n in 1:numclusters){
-      data1 <- data %>%
-        filter(icao24 == res[i])
-      avdis[i,1] <- res[i]
-      avdis[i,2] <- n
-      avdis[i,3] <- mean(data1[,8+n])
+      data2 <- as.numeric(as.character(data1[,8+n]))
+      data2 <- na.omit(data2)
+      avdis[j,1] <- res[i]
+      avdis[j,2] <- n
+      avdis[j,3] <- mean(data2)
+      j <- j + 1
     }
   }
   colnames(avdis) <- c("icao24", "cluster", "avdis")
-  
+
   #find sd of each mean function
   sd <- data.frame()
   for(n in 1:numclusters){
@@ -211,29 +232,30 @@ makeCluster <- function(data, numclusters) {
   
   #find likelihoods
   likelihoods <- data.frame()
+  j <- 1
   for (i in 1:length(res)){
     for (n in 1:numclusters){
       data1 <- avdis %>%
         filter(icao24 == res[i] & cluster == n)
-      sd1 <- sd %>%
-        filter(cluster == n)
-      likelihoods[i,1] <- res[i]
-      likelihoods[i,2] <- n
-      likelihoods[i,3] <- (1/(sqrt(2*pi*sd1[1,2])))*exp((-1/(sd1[1,2]^2))*(data1[1,3]^2))
+      likelihoods[j,1] <- res[i]
+      likelihoods[j,2] <- n
+      likelihoods[j,3] <- (1/(sqrt(2*pi*sd[n,2])))*exp((-1/(sd[n,2]^2))*(data1[1,3]^2))
+      j <- j + 1
     }
   }
   colnames(likelihoods) <- c("icao24", "cluster", "likelihood")
-  
+
   #select which function has highest likelihood for each path
   highli <-data.frame()
   for(i in 1:length(res)){
-    data1 <- likelihood %>%
-      filter(icao24 == res[i])
     highli[i,1] <- res[i]
-    hili <- max(data1[,3])
+    data1 <- likelihoods %>%
+      filter(icao24 == res[i])
+    HL <- max(data1[,3])
     for(n in 1:numclusters){
-      if(data1[n,3] == hili)
-        highli[i,2] <- n 
+      if(data1[n,3] == HL){
+         highli[i,2] <- n
+      }
     }
   }
   colnames(highli) <- c("icao24", "newgroup")
@@ -248,7 +270,7 @@ makeCluster <- function(data, numclusters) {
   group <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(as.character(data[r,2]) == highli[i,1]){
+    if(data[r,2] == highli[i,1]){
       group[r] <- highli[i,2]
     }
     else{
@@ -256,12 +278,11 @@ makeCluster <- function(data, numclusters) {
       group[r] <- highli[i,2]
     }
   }
-  
   data[,8] <- group
   return(data)
 }
 
-data <- makeData(firstdata,3)
+data <- makeData(firstdata,2)
 View(data)
 
 # unzip the zipfile
@@ -276,13 +297,11 @@ out <- crop(map, extent(-125, -65, 25, 50))
 
 conversion <- fortify(out)
 
-data[,3] <- as.numeric(as.character(data[,3]))
-data[,4] <- as.numeric(as.character(data[,4]))
 ggplot(data, aes(lon, lat, color= factor(group))) +  
   ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
-data1 <- makeCluster(data,2)
+data1 <- makeCluster(data1,2)
 
 ggplot(data1, aes(lon, lat, color= factor(group))) +  
   ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
