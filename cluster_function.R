@@ -85,7 +85,7 @@ makeData <- function(data, numclusters){
   }
   
   data <- cbind(data, st)
-
+  
   #remove all times prior to start time
   #if the plane takes more than one route through the area, this approach might delete previous routes
   data[,1] <- as.numeric(as.character(data[,1]))
@@ -109,7 +109,7 @@ makeData <- function(data, numclusters){
     }
   }
   data <- cbind(data, tz)
- 
+  
   #assign initial random group
   groups <- data.frame()
   l = 1
@@ -203,7 +203,7 @@ makeCluster <- function(data, numclusters) {
   
   res <- sort(res)
   
-  #find average distance from each mean function (need to define res)
+  #find average distance from each mean function
   avdis <- data.frame()
   j <- 1
   for(i in 1:length(res)){
@@ -229,7 +229,7 @@ makeCluster <- function(data, numclusters) {
     sd[n,2] <- sqrt(sum((data1$avdis)^2)/length(data1$avdis))
   }
   colnames(sd) <- c("cluster", "sd")
-  View(sd)
+  
   #find likelihoods
   likelihoods <- data.frame()
   j <- 1
@@ -244,7 +244,7 @@ makeCluster <- function(data, numclusters) {
     }
   }
   colnames(likelihoods) <- c("icao24", "cluster", "likelihood")
-
+  
   #select which function has highest likelihood for each path
   highli <-data.frame()
   for(i in 1:length(res)){
@@ -254,7 +254,7 @@ makeCluster <- function(data, numclusters) {
     HL <- max(data1[,3])
     for(n in 1:numclusters){
       if(data1[n,3] == HL){
-         highli[i,2] <- n
+        highli[i,2] <- n
       }
     }
   }
@@ -283,7 +283,85 @@ makeCluster <- function(data, numclusters) {
   return(everything)
 }
 
-data <- makeData(firstdata,2)
+compareMean <- function(fun1, fun2, numclusters, threshold){
+  #find squared distance between each time of the mean functions at every tz (functions are different lengths?)
+  sqdist <- data.frame()
+  for (r in 1:nrow(fun1)){
+    for (n in 1:numclusters){
+      sqdist[r,1] <- fun1[r,1]
+      sqdist[r,2] <- fun1[r,2]
+      data1 <- fun2 %>%
+        filter(group == n)
+      if(max(data1$tz) < fun1[r,2]){
+        sqdist[r,2+n] <- "NA"
+      }
+      else{
+        data2 <- data1 %>%
+          filter(tz == fun1[r,2])
+        sqdist[r,2+n] <- (as.numeric(as.character(fun1[r,3]))-as.numeric(as.character(data2[1,3])))^2 + (as.numeric(as.character(fun1[r,4]))-as.numeric(as.character(data2[1,4])))^2
+      }
+    }  
+  }
+  names(sqdist)[1] <- "fun1_cluster"
+  names(sqdist)[2] <- "tz"
+  
+  #find dissimilarity using squared distance form above
+  dis <- data.frame()
+  j <- 1
+  for(n in 1:numclusters){
+    for(m in 1:numclusters){
+      data1 <- sqdist %>%
+        filter(fun1_cluster == n)
+      data2 <- as.numeric(as.character(data1[,2+m]))
+      data2 <- na.omit(data2)
+      dis[j,1] <- n
+      dis[j,2] <- m
+      dis[j,3] <- sqrt(mean(data2))
+      j <- j + 1
+    }
+  }
+  colnames(dis) <- c("fun1_cluster", "fun2_cluster", "dis")
+  
+  #check if new functions are within threshold
+  goodFun <- data.frame()
+  i <- 0
+  for(n in 1:numclusters){
+    data1 <- dis %>%
+      filter(fun1_cluster == n)
+    for(m in 1:numclusters){
+      if(data1[i+m,3] <= threshold){
+        goodFun[n,m] <- 1
+      }
+      else{
+        goodFun[n,m] <- 0
+      }
+    }
+  }
+  
+  for(n in 1:numclusters){
+    if(sum(goodFun[,n])==0){
+      return("False")
+    }
+  }
+  return("True")
+}
+
+totalFunction <- function(data,numclusters,threshold){
+  data <- makeData(data,numclusters)
+  everything <- makeCluster(data,numclusters)
+  everything1 <- makeCluster(data.frame(everything[1]),numclusters)
+  fun1 <- data.frame(everything[2])
+  fun2 <- data.frame(everything1[2])
+  while(compareMean(fun1,fun2,numclusters,threshold) == "False"){
+    fun1 <- fun2
+    everything1 <- makeCluster(data.frame(everything1[1]),numclusters)
+    fun2 <- data.frame(everything1[2])
+  }
+  return(everything1)
+}
+
+everything <- totalFunction(firstdata,2,1)
+newfunctions <- data.frame(everything1[2])
 
 # unzip the zipfile
 unzip(zipfile = "thesis2021/states_21basic.zip", 
@@ -297,36 +375,6 @@ out <- crop(map, extent(-125, -65, 25, 50))
 
 conversion <- fortify(out)
 
-ggplot(data, aes(lon, lat, color= factor(group))) +  
+ggplot(newfunctions, aes(lon, lat, color= factor(group))) +  
   ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
-
-everything <- makeCluster(data,2)
-functions <- data.frame(everything[2])
-ggplot(functions, aes(lon, lat, color= factor(group))) +  
-  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
-
-everything1 <-makeCluster(data.frame(everything[1]),2)
-functions1 <- data.frame(everything1[2])
-ggplot(functions1, aes(lon, lat, color= factor(group))) +  
-  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
-
-everything2 <-makeCluster(data.frame(everything1[1]),2)
-functions2 <- data.frame(everything2[2])
-ggplot(functions2, aes(lon, lat, color= factor(group))) +  
-  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
-
-totalFunction <- function(data,numclusters, threshold){
-  data <- makeData(data,numclusters)
-  everything <- makeCluster(data,numclusters)
-  everything1 <- makeCluster(data.frame(everything[1]),numclusters)
-  fun1 <- data.frame(everything[2])
-  fun2 <- data.frame(everything1[2])
-  #similarity of mean functions
-  for(n in 1:numcluster){
-    
-  }
-}
