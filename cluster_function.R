@@ -172,7 +172,7 @@ makeCluster <- function(data, numclusters) {
   }
   colnames(fun) = c("group", "tz", "lon", "lat")
   
-  #find distance between each point and the mean functions at every tz (functions are different lengths?)
+  #find squared distance between each point and the mean functions at every tz (functions are different lengths?)
   for (r in 1:nrow(data)){
     for (n in 1:numclusters){
       data1 <- fun %>%
@@ -183,11 +183,11 @@ makeCluster <- function(data, numclusters) {
       else{
         data2 <- data1 %>%
           filter(tz == data[r,7])
-        data[r,8+n] <- sqrt((as.numeric(as.character(data[r,3]))-as.numeric(as.character(data2[1,3])))^2 + (as.numeric(as.character(data[r,4]))-as.numeric(as.character(data2[1,4])))^2)
+        data[r,8+n] <- (as.numeric(as.character(data[r,3]))-as.numeric(as.character(data2[1,3])))^2 + (as.numeric(as.character(data[r,4]))-as.numeric(as.character(data2[1,4])))^2
       }
     }  
   }
- 
+  
   #re-define res
   list <- data[,2]
   res <- c()
@@ -214,22 +214,22 @@ makeCluster <- function(data, numclusters) {
       data2 <- na.omit(data2)
       avdis[j,1] <- res[i]
       avdis[j,2] <- n
-      avdis[j,3] <- mean(data2)
+      avdis[j,3] <- sqrt(mean(data2))
       j <- j + 1
     }
   }
   colnames(avdis) <- c("icao24", "cluster", "avdis")
-
+  
   #find sd of each mean function
   sd <- data.frame()
   for(n in 1:numclusters){
     data1 <- avdis %>%
       filter(cluster == n)
     sd[n,1] <- n
-    sd[n,2] <- mean(data1$avdis)
+    sd[n,2] <- sqrt(sum((data1$avdis)^2)/length(data1$avdis))
   }
   colnames(sd) <- c("cluster", "sd")
-  
+  View(sd)
   #find likelihoods
   likelihoods <- data.frame()
   j <- 1
@@ -279,11 +279,11 @@ makeCluster <- function(data, numclusters) {
     }
   }
   data[,8] <- group
-  return(data)
+  everything <- list(data, fun, sd, likelihoods)
+  return(everything)
 }
 
 data <- makeData(firstdata,2)
-View(data)
 
 # unzip the zipfile
 unzip(zipfile = "thesis2021/states_21basic.zip", 
@@ -301,9 +301,32 @@ ggplot(data, aes(lon, lat, color= factor(group))) +
   ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
-data1 <- makeCluster(data1,2)
-
-ggplot(data1, aes(lon, lat, color= factor(group))) +  
+everything <- makeCluster(data,2)
+functions <- data.frame(everything[2])
+ggplot(functions, aes(lon, lat, color= factor(group))) +  
   ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
+everything1 <-makeCluster(data.frame(everything[1]),2)
+functions1 <- data.frame(everything1[2])
+ggplot(functions1, aes(lon, lat, color= factor(group))) +  
+  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
+everything2 <-makeCluster(data.frame(everything1[1]),2)
+functions2 <- data.frame(everything2[2])
+ggplot(functions2, aes(lon, lat, color= factor(group))) +  
+  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
+totalFunction <- function(data,numclusters, threshold){
+  data <- makeData(data,numclusters)
+  everything <- makeCluster(data,numclusters)
+  everything1 <- makeCluster(data.frame(everything[1]),numclusters)
+  fun1 <- data.frame(everything[2])
+  fun2 <- data.frame(everything1[2])
+  #similarity of mean functions
+  for(n in 1:numcluster){
+    
+  }
+}
