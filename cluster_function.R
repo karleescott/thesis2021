@@ -305,7 +305,7 @@ compareMean <- function(fun1, fun2, numclusters, threshold){
   names(sqdist)[1] <- "fun1_cluster"
   names(sqdist)[2] <- "tz"
   
-  #find dissimilarity using squared distance form above
+  #find dissimilarity using squared distance from above
   dis <- data.frame()
   j <- 1
   for(n in 1:numclusters){
@@ -360,8 +360,9 @@ totalFunction <- function(data,numclusters,threshold){
   return(everything1)
 }
 
+#Coersed NA on purpose, ignore errors. Takes about 5 minutes to run
 everything <- totalFunction(firstdata,2,1)
-newfunctions <- data.frame(everything1[2])
+newfunctions <- data.frame(everything[2])
 
 # unzip the zipfile
 unzip(zipfile = "thesis2021/states_21basic.zip", 
@@ -378,3 +379,16 @@ conversion <- fortify(out)
 ggplot(newfunctions, aes(lon, lat, color= factor(group))) +  
   ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
+everything1 <- totalFunction(firstdata,3,1)
+newfunctions1 <- data.frame(everything1[2])
+ggplot(newfunctions1, aes(lon, lat, color= factor(group))) +  
+  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
+groups <- data.frame(everything[1])
+ggplot(groups, aes(lon, lat, color= factor(group))) +  
+  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
+groups <- data.frame(everything1[1])
