@@ -360,10 +360,6 @@ totalFunction <- function(data,numclusters,threshold){
   return(everything1)
 }
 
-#Coersed NA on purpose, ignore errors. Takes about 5 minutes to run
-everything <- totalFunction(firstdata,2,1)
-newfunctions <- data.frame(everything[2])
-
 # unzip the zipfile
 unzip(zipfile = "thesis2021/states_21basic.zip", 
       exdir = 'states_21basic')
@@ -376,19 +372,49 @@ out <- crop(map, extent(-125, -65, 25, 50))
 
 conversion <- fortify(out)
 
-ggplot(newfunctions, aes(lon, lat, color= factor(group))) +  
+ggplot(data.frame(everything5[2]), aes(lon, lat, color= factor(group))) +  
   ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
-everything1 <- totalFunction(firstdata,3,1)
-newfunctions1 <- data.frame(everything1[2])
-ggplot(newfunctions1, aes(lon, lat, color= factor(group))) +  
-  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+#Coersed NA on purpose, ignore errors. Takes about 5 minutes to run
 
-groups <- data.frame(everything[1])
-ggplot(groups, aes(lon, lat, color= factor(group))) +  
-  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+#2 clusters
+everything2 <- totalFunction(firstdata,2,1)
+j2 = 0
+likelihood2 = data.frame(everything2[4])
+i = 1
+while(i < nrow(likelihood2)){
+  j2 = j2 + log(max(likelihood2[i,3],likelihood2[i+1,3]))
+  i = i + 2
+}
 
-groups <- data.frame(everything1[1])
+#3 clusters
+everything3 <- totalFunction(firstdata,3,1)
+j3 = 0
+likelihood3 = data.frame(everything3[4])
+i = 1
+while(i < nrow(likelihood3)){
+  j3 = j3 + log(max(likelihood3[i,3],likelihood3[i+1,3]))
+  i = i + 2
+}
+
+#4 clusters
+everything4 <- totalFunction(firstdata,4,1)
+j4 = 0
+likelihood4 = data.frame(everything4[4])
+i = 1
+while(i < nrow(likelihood4)){
+  j4 = j4 + log(max(likelihood4[i,3],likelihood4[i+1,3]))
+  i = i + 2
+}
+
+#5 clusters
+everything5 <- totalFunction(firstdata,5,1)
+j5 = 0
+likelihood5 = data.frame(everything5[4])
+i = 1
+while(i < nrow(likelihood5)){
+  j5 = j5 + log(max(likelihood5[i,3],likelihood5[i+1,3]))
+  i = i + 2
+}  
+  
