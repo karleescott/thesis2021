@@ -239,7 +239,7 @@ makeCluster <- function(data, numclusters) {
         filter(icao24 == res[i] & cluster == n)
       likelihoods[j,1] <- res[i]
       likelihoods[j,2] <- n
-      likelihoods[j,3] <- (1/(sqrt(2*pi*sd[n,2])))*exp((-1/(sd[n,2]^2))*(data1[1,3]^2))
+      likelihoods[j,3] <- (1/(sqrt(2*pi*sd[n,2])))*exp((-1/(2*sd[n,2]^2))*(data1[1,3]^2))
       j <- j + 1
     }
   }
@@ -417,4 +417,5 @@ while(i < nrow(likelihood5)){
   j5 = j5 + log(max(likelihood5[i,3],likelihood5[i+1,3]))
   i = i + 2
 }  
-  
+
+View(likelihood5)
