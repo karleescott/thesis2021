@@ -394,8 +394,8 @@ j3 = 0
 likelihood3 = data.frame(everything3[4])
 i = 1
 while(i < nrow(likelihood3)){
-  j3 = j3 + log(max(likelihood3[i,3],likelihood3[i+1,3]))
-  i = i + 2
+  j3 = j3 + log(max(likelihood3[i,3],likelihood3[i+1,3],likelihood3[i+2,3]))
+  i = i + 3
 }
 
 #4 clusters
@@ -404,8 +404,8 @@ j4 = 0
 likelihood4 = data.frame(everything4[4])
 i = 1
 while(i < nrow(likelihood4)){
-  j4 = j4 + log(max(likelihood4[i,3],likelihood4[i+1,3]))
-  i = i + 2
+  j4 = j4 + log(max(likelihood4[i,3],likelihood4[i+1,3],likelihood4[i+2,3],likelihood4[i+3,3]))
+  i = i + 4
 }
 
 #5 clusters
@@ -414,8 +414,19 @@ j5 = 0
 likelihood5 = data.frame(everything5[4])
 i = 1
 while(i < nrow(likelihood5)){
-  j5 = j5 + log(max(likelihood5[i,3],likelihood5[i+1,3]))
-  i = i + 2
+  j5 = j5 + log(max(likelihood5[i,3],likelihood5[i+1,3],likelihood5[i+2,3],likelihood5[i+3,3],likelihood5[i+4,3]))
+  i = i + 5
 }  
 
-View(likelihood5)
+#https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/AIC
+AIC2 <- 2*j2-2*2
+BIC2 <- 2*j2-log(10531)*2
+
+AIC3 <- 2*j3-2*3
+BIC3 <- 2*j3-log(10531)*3
+
+AIC4 <- 2*j4-2*4
+BIC4 <- 2*j4-log(10531)*4
+
+AIC5 <- 2*j5-2*5
+BIC5 <- 2*j5-log(10531)*5
