@@ -7,7 +7,7 @@ library(ggplot2)
 firstdata <- read.csv("/data/ADSB/OpenSky/states_2020-07-13-00.csv")
 
 makeData <- function(lat,lon){ 
-  numclusters = 3
+  numclusters = 4
   data <- firstdata
   #filter data
   data <- na.omit(data)
@@ -178,7 +178,7 @@ makeData <- function(lat,lon){
 
 
 makeCluster <- function(data) {
-  numclusters=3
+  numclusters = 4
   #create mean functions
   fun <- data.frame()
   data <- data %>%
@@ -313,7 +313,7 @@ makeCluster <- function(data) {
 }
 
 compareMean <- function(fun1, fun2, threshold){
-  numclusters=3
+  numclusters = 4
   #find squared distance between each time of the mean functions at every tz (functions are different lengths?)
   sqdist <- data.frame()
   for (r in 1:nrow(fun1)){
