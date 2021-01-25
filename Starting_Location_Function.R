@@ -391,6 +391,15 @@ totalFunction <- function(lat,lon,threshold){
 }
 
 everything1 <- totalFunction(35.8801,-78.7880,1)
+everything2 <- totalFunction(25.7617,-80.1918,1)
+df1 <- as.data.frame(everything1[2])
+df2 <- as.data.frame(everything2[2])
+ 
+for(i in 1:nrow(df2)){
+  df2[i,1] <- df2[i,1] + 4
+}
+
+totalData <- rbind(df1,df2)
 
 # unzip the zipfile
 unzip(zipfile = "thesis2021/states_21basic.zip", 
@@ -404,7 +413,7 @@ out <- crop(map, extent(-125, -65, 25, 50))
 
 conversion <- fortify(out)
 
-ggplot(data.frame(everything1[2]), aes(lon, lat, color= factor(group))) +  
+ggplot(data.frame(totalData), aes(lon, lat, color= factor(group))) +  
   ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
