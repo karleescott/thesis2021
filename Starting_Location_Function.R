@@ -176,7 +176,6 @@ makeData <- function(lat,lon){
   return(data)
 }
 
-
 makeCluster <- function(data) {
   numclusters = 4
   #create mean functions
@@ -376,8 +375,131 @@ compareMean <- function(fun1, fun2, threshold){
   return("True")
 }
 
-totalFunction <- function(lat,lon,threshold){
-  data <- makeData(lat,lon)
+#Coersed NA on purpose, ignore errors. Takes about 5 minutes to run
+
+minimumDistance <- function(fun1,fun2){
+  dis <- 180
+  for (i in 1:nrow(fun1)){
+    for(j in 1:nrow(fun2)){
+      num <- sqrt((fun1[i,3]-fun2[j,3])^2+(fun1[i,4]-fun2[j,4])^2)
+      if(num<dis){
+        dis <- num
+        loc1 <- i
+        loc2 <- j
+      }
+    }
+  }
+  minDisLoc <- list(dis,loc1,loc2)
+  return(minDisLoc)
+}
+
+totalPath <- function(df1,df2){
+  fun1 <- df1 %>%
+    filter(group == 1)
+  fun2 <- df1 %>%
+    filter(group == 2)
+  fun3 <- df1 %>%
+    filter(group == 3)
+  fun4 <- df1 %>%
+    filter(group == 4)
+  fun5 <- df2 %>%
+    filter(group == 5)
+  fun6 <- df2 %>%
+    filter(group == 6)
+  fun7 <- df2 %>%
+    filter(group == 7)
+  fun8 <- df2 %>%
+    filter(group == 8)
+  
+  mindis15 <- data.frame(minimumDistance(fun1,fun5))
+  colnames(mindis15) <- c("Distance","Loc1","Loc2")
+  mindis16 <- data.frame(minimumDistance(fun1,fun6))
+  colnames(mindis16) <- c("Distance","Loc1","Loc2")
+  mindis17 <- data.frame(minimumDistance(fun1,fun7))
+  colnames(mindis17) <- c("Distance","Loc1","Loc2")
+  mindis18 <- data.frame(minimumDistance(fun1,fun8))
+  colnames(mindis18) <- c("Distance","Loc1","Loc2")
+  
+  mindis25 <- data.frame(minimumDistance(fun2,fun5))
+  colnames(mindis25) <- c("Distance","Loc1","Loc2")
+  mindis26 <- data.frame(minimumDistance(fun2,fun6))
+  colnames(mindis26) <- c("Distance","Loc1","Loc2")
+  mindis27 <- data.frame(minimumDistance(fun2,fun7))
+  colnames(mindis27) <- c("Distance","Loc1","Loc2")
+  mindis28 <- data.frame(minimumDistance(fun2,fun8))
+  colnames(mindis28) <- c("Distance","Loc1","Loc2")
+  
+  mindis35 <- data.frame(minimumDistance(fun3,fun5))
+  colnames(mindis35) <- c("Distance","Loc1","Loc2")
+  mindis36 <- data.frame(minimumDistance(fun3,fun6))
+  colnames(mindis36) <- c("Distance","Loc1","Loc2")
+  mindis37 <- data.frame(minimumDistance(fun3,fun7))
+  colnames(mindis37) <- c("Distance","Loc1","Loc2")
+  mindis38 <- data.frame(minimumDistance(fun3,fun8))
+  colnames(mindis38) <- c("Distance","Loc1","Loc2")
+  
+  mindis45 <- data.frame(minimumDistance(fun4,fun5))
+  colnames(mindis45) <- c("Distance","Loc1","Loc2")
+  mindis46 <- data.frame(minimumDistance(fun4,fun6))
+  colnames(mindis46) <- c("Distance","Loc1","Loc2")
+  mindis47 <- data.frame(minimumDistance(fun4,fun7))
+  colnames(mindis47) <- c("Distance","Loc1","Loc2")
+  mindis48 <- data.frame(minimumDistance(fun4,fun8))
+  colnames(mindis48) <- c("Distance","Loc1","Loc2")
+  
+  mindis <- rbind(mindis15,mindis16,mindis17,mindis18,mindis25,mindis26,mindis27,mindis28,mindis35,mindis36,mindis37,mindis38,mindis45,mindis46,mindis47,mindis48)
+  
+  minIndex <- which.min(mindis[,1])
+  selMinDis <- mindis[minIndex,]
+  
+  if(minIndex/4<=1){
+    Fun1 <- fun1 %>%
+      filter(tz < as.numeric(selMinDis[2]))
+    Fun2 <- df2[df2$group==minIndex+4,] %>%
+      filter(tz < as.numeric(selMinDis[3]))
+    
+    combinedFunction <- rbind(Fun1,Fun2)
+  } 
+  
+  else if(minIndex/4<=2){
+    Fun1 <- fun2 %>%
+      filter(tz < as.numeric(selMinDis[2]))
+    Fun2 <- df2[df2$group==minIndex,] %>%
+      filter(tz < as.numeric(selMinDis[3]))
+    
+    combinedFunction <- rbind(Fun1,Fun2)
+  }
+  
+  else if(minIndex/4<=3){
+    Fun1 <- fun3 %>%
+      filter(tz < as.numeric(selMinDis[2]))
+    Fun2 <- df2[df2$group==minIndex-4,] %>%
+      filter(tz < as.numeric(selMinDis[3]))
+    
+    combinedFunction <- rbind(Fun1,Fun2)
+  }
+  
+  else {
+    Fun1 <- fun4 %>%
+      filter(tz < as.numeric(selMinDis[2]))
+    Fun2 <- df2[df2$group==minIndex-8,] %>%
+      filter(tz < as.numeric(selMinDis[3]))
+    
+    combinedFunction <- rbind(Fun1,Fun2)
+
+  }
+  
+  for (i in 1:nrow(combinedFunction)){
+    combinedFunction[i,2] <- i
+  }
+  
+  return(combinedFunction)
+  
+}
+
+totalFunction <- function(lat1,lon1,lat2,lon2,threshold){
+  #starting route
+  data <- makeData(lat1,lon1)
   everything <- makeCluster(data)
   everything1 <- makeCluster(data.frame(everything[1]))
   fun1 <- data.frame(everything[2])
@@ -387,34 +509,58 @@ totalFunction <- function(lat,lon,threshold){
     everything1 <- makeCluster(data.frame(everything1[1]))
     fun2 <- data.frame(everything1[2])
   }
-  return(everything1)
+  
+  #ending route
+  data <- makeData(lat2,lon2)
+  everything <- makeCluster(data)
+  everything2 <- makeCluster(data.frame(everything[1]))
+  fun1 <- data.frame(everything[2])
+  fun2 <- data.frame(everything2[2])
+  while(compareMean(fun1,fun2,threshold) == "False"){
+    fun1 <- fun2
+    everything2 <- makeCluster(data.frame(everything2[1]))
+    fun2 <- data.frame(everything2[2])
+  }
+  
+  df1 <- as.data.frame(everything1[2])
+  df2 <- as.data.frame(everything2[2])
+  
+  for(i in 1:nrow(df2)){
+    df2[i,1] <- df2[i,1] + 4
+  }
+  
+  totalData <- rbind(df1,df2)
+  
+  #plot all possible flight routes
+  
+  # unzip the zipfile
+  unzip(zipfile = "thesis2021/states_21basic.zip", 
+        exdir = 'states_21basic')
+  
+  # load the shapefile 
+  map <- readOGR("states_21basic/states.shp")
+  
+  #crop the portion needed
+  out <- crop(map, extent(-125, -65, 25, 50))
+  
+  conversion <- fortify(out)
+  
+  plot1 <- ggplot(data.frame(totalData), aes(lon, lat, color= factor(group))) +  
+    ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+    geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+  
+  CF <- data.frame(totalPath(df1,df2))
+  
+  plot2 <- ggplot(CF, aes(lon, lat, color= factor(group))) +  
+    ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+    geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+  
+  finalAnswer <- list(CF, plot1, plot2)
+
+  return(finalAnswer)
 }
 
-everything1 <- totalFunction(35.8801,-78.7880,1)
-everything2 <- totalFunction(25.7617,-80.1918,1)
-df1 <- as.data.frame(everything1[2])
-df2 <- as.data.frame(everything2[2])
- 
-for(i in 1:nrow(df2)){
-  df2[i,1] <- df2[i,1] + 4
-}
+finalAnswer <- totalFunction(35.8801,-78.7880,25.7617,-80.1918, 1)
 
-totalData <- rbind(df1,df2)
-
-# unzip the zipfile
-unzip(zipfile = "thesis2021/states_21basic.zip", 
-      exdir = 'states_21basic')
-
-# load the shapefile 
-map <- readOGR("states_21basic/states.shp")
-
-#crop the portion needed
-out <- crop(map, extent(-125, -65, 25, 50))
-
-conversion <- fortify(out)
-
-ggplot(data.frame(totalData), aes(lon, lat, color= factor(group))) +  
-  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
-
-#Coersed NA on purpose, ignore errors. Takes about 5 minutes to run
+finalAnswer[2]
+finalAnswer[3]
