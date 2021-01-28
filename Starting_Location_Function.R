@@ -555,12 +555,14 @@ totalFunction <- function(lat1,lon1,lat2,lon2,threshold){
     ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
     geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
   
-  finalAnswer <- list(CF, plot1, plot2)
+  finalAnswer <- list(CF, totalData, plot1, plot2)
 
   return(finalAnswer)
 }
 
 finalAnswer <- totalFunction(35.8801,-78.7880,25.7617,-80.1918, 1)
 
-finalAnswer[2]
+View(data.frame(finalAnswer[1]))
+View(data.frame(finalAnswer[2]))
 finalAnswer[3]
+finalAnswer[4]
