@@ -4,6 +4,7 @@ usdata <- read.csv("/lfs/karlee_combined_data.csv")
 
 #makes the data to be used in total Function. startTime is the hour of day (0-23)
 makeData <- function(lat,lon,startTime){ 
+  print(startTime)
   data <- usdata
   data <- data %>%
     filter(time >= (1594598400+3600*startTime) & time < (1594598400+3600*(startTime+1)))
@@ -185,6 +186,7 @@ makeCluster <- function(data) {
   for(n in 1:numclusters){
     data1 <- data %>%
       filter(group == n)
+    print(max(data1$tz))
     for(i in 1:max(data1$tz)){
       data2 <- data1 %>%
         filter(tz == i)
@@ -214,7 +216,7 @@ makeCluster <- function(data) {
       }
     }  
   }
-  
+    
   #re-define res
   list <- data[,2]
   res <- c()
@@ -375,7 +377,7 @@ compareMean <- function(fun1, fun2, threshold){
 }
 
 #all specified airport data for 13 July. Must be filtered by hour to use. 
-combineData <- function(lat,lon){
+combineData <- function(lat,lon,threshold){
   data <- makeData(lat,lon,0)
   everything <- makeCluster(data)
   everything1 <- makeCluster(data.frame(everything[1]))
@@ -389,7 +391,8 @@ combineData <- function(lat,lon){
   
   data <- cbind(as.data.frame(everything1[2]),hour = 0)
   
-  for (i in range(1,24)){
+  for (i in 1:23){
+    View(data)
     data1 <- makeData(lat,lon,i)
     everything <- makeCluster(data1)
     everything2 <- makeCluster(data.frame(everything[1]))
@@ -401,7 +404,7 @@ combineData <- function(lat,lon){
       fun2 <- data.frame(everything2[2])
     }
     
-    data <- cbind(as.data.frame(everything2[2]),hour = i)
+    data1 <- cbind(as.data.frame(everything2[2]),hour = i)
     
     data <- rbind(data,data1)
 
@@ -592,6 +595,26 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
   return(finalAnswer)
 }
 
-#finalAnswer <- totalFunction(35.8801,-78.7880,25.7617,-80.1918,1)
-finalAnswer <- totalFunction(RDU,MIA,1)
 
+RDU <- combineData(35.8801,-78.7880,1)
+write.csv(RDU,"\lfs\\karlee_RDU.csv")
+MIA <- combineData(25.7617,-80.1918,1)
+write.csv(RDU,"\lfs\\karlee_RDU.csv")
+
+finalAnswer <- totalFunction(RDU,MIA,0,1)
+
+data1 <- makeData(35.8801,-78.7880,2)
+everything <- makeCluster(data1)
+everything2 <- makeCluster(data.frame(everything[1]))
+fun1 <- data.frame(everything[2])
+fun2 <- data.frame(everything2[2])
+while(compareMean(fun1,fun2,1) == "False"){
+  fun1 <- fun2
+  everything2 <- makeCluster(data.frame(everything2[1]))
+  fun2 <- data.frame(everything2[2])
+}
+
+View(as.data.frame(everything2[1]))
+data1 <- cbind(as.data.frame(everything2[2]),hour = i)
+
+data <- rbind(data,data1)
