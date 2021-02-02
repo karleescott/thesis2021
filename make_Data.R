@@ -606,16 +606,3 @@ MIA <- combineData(25.7617,-80.1918,1)
 write.csv(RDU,"\lfs\\karlee_RDU.csv")
 
 finalAnswer <- totalFunction(RDU,MIA,0,1)
-
-data <- makeData(35.8801,-78.7880,8)
-everything <- makeCluster(data)
-everything1 <- makeCluster(data.frame(everything[1]))
-fun1 <- data.frame(everything[2])
-fun2 <- data.frame(everything1[2])
-while(compareMean(fun1,fun2,threshold) == "False"){
-  fun1 <- fun2
-  everything1 <- makeCluster(data.frame(everything1[1]))
-  fun2 <- data.frame(everything1[2])
-}
-
-data <- cbind(as.data.frame(everything1[2]),hour = 0)
