@@ -388,7 +388,8 @@ combineData <- function(lat,lon,threshold){
   everything1 <- makeCluster(data.frame(everything[1]))
   fun1 <- data.frame(everything[2])
   fun2 <- data.frame(everything1[2])
-  while(compareMean(fun1,fun2,threshold) == "False"){
+  j <- 0
+  while(compareMean(fun1,fun2,threshold) == "False"|| j == 10){
     fun1 <- fun2
     everything1 <- makeCluster(data.frame(everything1[1]))
     fun2 <- data.frame(everything1[2])
@@ -402,10 +403,12 @@ combineData <- function(lat,lon,threshold){
     everything2 <- makeCluster(data.frame(everything[1]))
     fun1 <- data.frame(everything[2])
     fun2 <- data.frame(everything2[2])
-    while(compareMean(fun1,fun2,threshold) == "False"){
+    j = 0
+    while(compareMean(fun1,fun2,threshold) == "False" || j == 10){
       fun1 <- fun2
       everything2 <- makeCluster(data.frame(everything2[1]))
       fun2 <- data.frame(everything2[2])
+      j <- j + 1
     }
     
     data1 <- cbind(as.data.frame(everything2[2]),time_of_day = i)
