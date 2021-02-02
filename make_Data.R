@@ -7,7 +7,7 @@ makeData <- function(lat,lon,startTime){
   print(startTime)
   data <- usdata
   data <- data %>%
-    filter(time >= (1594598400+3600*startTime) & time < (1594598400+3600*(startTime+1)))
+    filter(time >= (1594598400+3600*6*(startTime)) & time < (1594598400+3600*6*(startTime+1)))
   numclusters = 4
   #filter data
   data <- na.omit(data)
@@ -177,7 +177,11 @@ makeData <- function(lat,lon,startTime){
 }
 
 makeCluster <- function(data) {
-  numclusters = 4
+  numclusters <- length(unique(data$group))
+  groups <- sort(unique(data$group))
+  for(r in 1:nrow(data)){
+    data[r,8] <- match(data[r,8],groups)
+  }
   #create mean functions
   fun <- data.frame()
   data <- data %>%
@@ -186,7 +190,6 @@ makeCluster <- function(data) {
   for(n in 1:numclusters){
     data1 <- data %>%
       filter(group == n)
-    print(max(data1$tz))
     for(i in 1:max(data1$tz)){
       data2 <- data1 %>%
         filter(tz == i)
@@ -312,8 +315,10 @@ makeCluster <- function(data) {
   return(everything)
 }
 
+
+#####roadblock 4 clusters turned into 3 (no data was assigned to group 1), now theres no function to compare it to.
 compareMean <- function(fun1, fun2, threshold){
-  numclusters = 4
+  numclusters = length(unique(fun2$group))
   #find squared distance between each time of the mean functions at every tz (functions are different lengths?)
   sqdist <- data.frame()
   for (r in 1:nrow(fun1)){
@@ -389,10 +394,9 @@ combineData <- function(lat,lon,threshold){
     fun2 <- data.frame(everything1[2])
   }
   
-  data <- cbind(as.data.frame(everything1[2]),hour = 0)
+  data <- cbind(as.data.frame(everything1[2]),time_of_day = 0)
   
-  for (i in 1:23){
-    View(data)
+  for (i in 1:3){
     data1 <- makeData(lat,lon,i)
     everything <- makeCluster(data1)
     everything2 <- makeCluster(data.frame(everything[1]))
@@ -404,7 +408,7 @@ combineData <- function(lat,lon,threshold){
       fun2 <- data.frame(everything2[2])
     }
     
-    data1 <- cbind(as.data.frame(everything2[2]),hour = i)
+    data1 <- cbind(as.data.frame(everything2[2]),time_of_day = i)
     
     data <- rbind(data,data1)
 
@@ -603,18 +607,15 @@ write.csv(RDU,"\lfs\\karlee_RDU.csv")
 
 finalAnswer <- totalFunction(RDU,MIA,0,1)
 
-data1 <- makeData(35.8801,-78.7880,2)
-everything <- makeCluster(data1)
-everything2 <- makeCluster(data.frame(everything[1]))
+data <- makeData(35.8801,-78.7880,8)
+everything <- makeCluster(data)
+everything1 <- makeCluster(data.frame(everything[1]))
 fun1 <- data.frame(everything[2])
-fun2 <- data.frame(everything2[2])
-while(compareMean(fun1,fun2,1) == "False"){
+fun2 <- data.frame(everything1[2])
+while(compareMean(fun1,fun2,threshold) == "False"){
   fun1 <- fun2
-  everything2 <- makeCluster(data.frame(everything2[1]))
-  fun2 <- data.frame(everything2[2])
+  everything1 <- makeCluster(data.frame(everything1[1]))
+  fun2 <- data.frame(everything1[2])
 }
 
-View(as.data.frame(everything2[1]))
-data1 <- cbind(as.data.frame(everything2[2]),hour = i)
-
-data <- rbind(data,data1)
+data <- cbind(as.data.frame(everything1[2]),hour = 0)
