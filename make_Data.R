@@ -393,6 +393,7 @@ combineData <- function(lat,lon,threshold){
     fun1 <- fun2
     everything1 <- makeCluster(data.frame(everything1[1]))
     fun2 <- data.frame(everything1[2])
+    j <- j + 1
   }
   
   data <- cbind(as.data.frame(everything1[2]),time_of_day = 0)
@@ -546,25 +547,29 @@ totalPath <- function(df1,df2){
 #returns full data of all routes, returns data with "best route", returns plots of all routes and best route
 totalFunction <- function(starting_airport,ending_airport,startingTime,threshold){
   if(starting_airport == "RDU"){
-    df1 <- read.csv("/lfs/karlee_RDU.csv")
+    df1 <- read.csv("lfs\\karlee_RDU.csv")
     df1 <- df1 %>%
       filter(hour == startingTime)
+    df1 <- df1[,-1]
   }
   else {
-    df1 <- read.csv("/lfs/karlee_MIA.csv")
+    df1 <- read.csv("lfs\\karlee_MIA.csv")
     df1 <- df1 %>%
       filter(hour == startingTime)
+    df1 <- df1[,-1]
   }
   
   if(ending_airport == "RDU"){
-    df2 <- read.csv("/lfs/karlee_RDU.csv")
+    df2 <- read.csv("lfs\\karlee_RDU.csv")
     df2 <- df2 %>%
       filter(hour == startingTime)
+    df2 <- df2[,-1]
   }
   else {
-    df2 <- read.csv("/lfs/karlee_MIA.csv")
+    df2 <- read.csv("lfs\\karlee_MIA.csv")
     df2 <- df2 %>%
       filter(hour == startingTime)
+    df2 <- df2[,-1]
   }
   
   for(i in 1:nrow(df2)){
@@ -604,8 +609,10 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
 
 
 RDU <- combineData(35.8801,-78.7880,1)
-write.csv(RDU,"\lfs\\karlee_RDU.csv")
+write.csv(RDU,"lfs\\karlee_RDU.csv")
+RDU1 <- read.csv("lfs\\karlee_RDU.csv")
 MIA <- combineData(25.7617,-80.1918,1)
 write.csv(RDU,"\lfs\\karlee_RDU.csv")
 
 finalAnswer <- totalFunction(RDU,MIA,0,1)
+warnings()
