@@ -1,4 +1,9 @@
 library(tidyverse)
+library(rgdal)
+library(raster)
+library(rgeos)
+library(ggplot2)
+
 
 usdata <- read.csv("/lfs/karlee_combined_data.csv")
 
@@ -422,158 +427,80 @@ combineData <- function(lat,lon,threshold){
 
 #Coersed NA on purpose, ignore errors. Takes about 5 minutes to run
 
-#smallest distance between two functions
-minimumDistance <- function(fun1,fun2){
-  dis <- 180
-  for (i in 1:nrow(fun1)){
-    for(j in 1:nrow(fun2)){
-      num <- sqrt((fun1[i,3]-fun2[j,3])^2+(fun1[i,4]-fun2[j,4])^2)
-      if(num<dis){
-        dis <- num
-        loc1 <- i
-        loc2 <- j
-      }
+closest_path <- function(fun,lat,lon){
+  dis <- 10000
+  for(r in 1:nrow(fun)){
+    dis1 <- sqrt((fun[r,3]-lat)^2+(fun[r,4]-lon)^2)
+    if(dis1<dis){
+      dis <- dis1
+      loc <- r
     }
   }
-  minDisLoc <- list(dis,loc1,loc2)
-  return(minDisLoc)
+  info <- c(dis,r)
 }
 
-#combines closest functions to form best path
-totalPath <- function(df1,df2){
-  fun1 <- df1 %>%
+totalPath <- function(df1,df2,lat,lon){
+  
+  #which path from starting airport gets closest to end airport
+  numclusters <- length(unique(df1$group))
+  fun <- df1 %>%
     filter(group == 1)
-  fun2 <- df1 %>%
-    filter(group == 2)
-  fun3 <- df1 %>%
-    filter(group == 3)
-  fun4 <- df1 %>%
-    filter(group == 4)
-  fun5 <- df2 %>%
-    filter(group == 5)
-  fun6 <- df2 %>%
-    filter(group == 6)
-  fun7 <- df2 %>%
-    filter(group == 7)
-  fun8 <- df2 %>%
-    filter(group == 8)
-  
-  mindis15 <- data.frame(minimumDistance(fun1,fun5))
-  colnames(mindis15) <- c("Distance","Loc1","Loc2")
-  mindis16 <- data.frame(minimumDistance(fun1,fun6))
-  colnames(mindis16) <- c("Distance","Loc1","Loc2")
-  mindis17 <- data.frame(minimumDistance(fun1,fun7))
-  colnames(mindis17) <- c("Distance","Loc1","Loc2")
-  mindis18 <- data.frame(minimumDistance(fun1,fun8))
-  colnames(mindis18) <- c("Distance","Loc1","Loc2")
-  
-  mindis25 <- data.frame(minimumDistance(fun2,fun5))
-  colnames(mindis25) <- c("Distance","Loc1","Loc2")
-  mindis26 <- data.frame(minimumDistance(fun2,fun6))
-  colnames(mindis26) <- c("Distance","Loc1","Loc2")
-  mindis27 <- data.frame(minimumDistance(fun2,fun7))
-  colnames(mindis27) <- c("Distance","Loc1","Loc2")
-  mindis28 <- data.frame(minimumDistance(fun2,fun8))
-  colnames(mindis28) <- c("Distance","Loc1","Loc2")
-  
-  mindis35 <- data.frame(minimumDistance(fun3,fun5))
-  colnames(mindis35) <- c("Distance","Loc1","Loc2")
-  mindis36 <- data.frame(minimumDistance(fun3,fun6))
-  colnames(mindis36) <- c("Distance","Loc1","Loc2")
-  mindis37 <- data.frame(minimumDistance(fun3,fun7))
-  colnames(mindis37) <- c("Distance","Loc1","Loc2")
-  mindis38 <- data.frame(minimumDistance(fun3,fun8))
-  colnames(mindis38) <- c("Distance","Loc1","Loc2")
-  
-  mindis45 <- data.frame(minimumDistance(fun4,fun5))
-  colnames(mindis45) <- c("Distance","Loc1","Loc2")
-  mindis46 <- data.frame(minimumDistance(fun4,fun6))
-  colnames(mindis46) <- c("Distance","Loc1","Loc2")
-  mindis47 <- data.frame(minimumDistance(fun4,fun7))
-  colnames(mindis47) <- c("Distance","Loc1","Loc2")
-  mindis48 <- data.frame(minimumDistance(fun4,fun8))
-  colnames(mindis48) <- c("Distance","Loc1","Loc2")
-  
-  mindis <- rbind(mindis15,mindis16,mindis17,mindis18,mindis25,mindis26,mindis27,mindis28,mindis35,mindis36,mindis37,mindis38,mindis45,mindis46,mindis47,mindis48)
-  
-  minIndex <- which.min(mindis[,1])
-  selMinDis <- mindis[minIndex,]
-  
-  if(minIndex/4<=1){
-    Fun1 <- fun1 %>%
-      filter(tz < as.numeric(selMinDis[2]))
-    Fun2 <- df2[df2$group==minIndex+4,] %>%
-      filter(tz < as.numeric(selMinDis[3]))
-    
-    combinedFunction <- rbind(Fun1,Fun2)
-  } 
-  
-  else if(minIndex/4<=2){
-    Fun1 <- fun2 %>%
-      filter(tz < as.numeric(selMinDis[2]))
-    Fun2 <- df2[df2$group==minIndex,] %>%
-      filter(tz < as.numeric(selMinDis[3]))
-    
-    combinedFunction <- rbind(Fun1,Fun2)
+  info <- closest_path(fun,lat,lon)
+  for(n in 2:numclusters){
+    fun1 <- df1 %>%
+      filter(group == n)
+    info1 <- closest_path(fun1,lat,lon)
+    if(info1[1] < info[1]){
+      fun <- fun1
+      info <- info1
+    }
   }
   
-  else if(minIndex/4<=3){
-    Fun1 <- fun3 %>%
-      filter(tz < as.numeric(selMinDis[2]))
-    Fun2 <- df2[df2$group==minIndex-4,] %>%
-      filter(tz < as.numeric(selMinDis[3]))
-    
-    combinedFunction <- rbind(Fun1,Fun2)
+  #which path from ending airport gets closest to the point above
+  numclusters <- length(unique(df2$group))
+  fun1 <- df2 %>%
+    filter(group == 1)
+  lat1 <- fun1[info[2],3]
+  lon1 <- fun1[info[2],4]
+  info1 <- closest_path(fun,lat1,lon1)
+  for(n in 2:numclusters){
+    fun2 <- df2 %>%
+      filter(group == n)
+    info2 <- closest_path(fun2,lat1,lon1)
+    if(info2[1] < info1[1]){
+      fun1 <- fun2
+      info1 <- info2
+    }
   }
   
-  else {
-    Fun1 <- fun4 %>%
-      filter(tz < as.numeric(selMinDis[2]))
-    Fun2 <- df2[df2$group==minIndex-8,] %>%
-      filter(tz < as.numeric(selMinDis[3]))
-    
-    combinedFunction <- rbind(Fun1,Fun2)
-    
+  fun <- fun[1:info[2],]
+  fun1 <- fun1[1:info1[2],]
+  
+  for(r in 1:nrow(fun1)){
+    fun1[r,2] <- info[2]+r
   }
   
-  for (i in 1:nrow(combinedFunction)){
-    combinedFunction[i,2] <- i
-  }
-  
-  return(combinedFunction)
-  
+  route <- rbind(fun,fun1)
+  return(route)
 }
 
 #returns full data of all routes, returns data with "best route", returns plots of all routes and best route
 totalFunction <- function(starting_airport,ending_airport,startingTime,threshold){
-  if(starting_airport == "RDU"){
-    df1 <- read.csv("lfs\\karlee_RDU.csv")
-    df1 <- df1 %>%
-      filter(hour == startingTime)
-    df1 <- df1[,-1]
-  }
-  else {
-    df1 <- read.csv("lfs\\karlee_MIA.csv")
-    df1 <- df1 %>%
-      filter(hour == startingTime)
-    df1 <- df1[,-1]
-  }
+  airport_data <- read.csv("lfs\\airport_data_karlee.csv")
+  df1 <- airport_data %>%
+    filter(airport == starting_airport & time_of_day == "startingTime")
+  df1 <- df1[,-5]
+  df1 <- df1[,-6]
   
-  if(ending_airport == "RDU"){
-    df2 <- read.csv("lfs\\karlee_RDU.csv")
-    df2 <- df2 %>%
-      filter(hour == startingTime)
-    df2 <- df2[,-1]
-  }
-  else {
-    df2 <- read.csv("lfs\\karlee_MIA.csv")
-    df2 <- df2 %>%
-      filter(hour == startingTime)
-    df2 <- df2[,-1]
-  }
+  df2 <- airport_data %>%
+    filter(airport == ending_airport & time_of_day == "startingTime")
+  df1 <- df1[,-5]
+  df1 <- df1[,-6]
   
+  numclusters <- length(unique(df1$group))
+    
   for(i in 1:nrow(df2)){
-    df2[i,1] <- df2[i,1] + 4
+    df2[i,1] <- df2[i,1] + numclusters
   }
   
   totalData <- rbind(df1,df2)
@@ -596,7 +523,13 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
     ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
     geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
   
-  CF <- data.frame(totalPath(df1,df2))
+  location <- read.csv("lfs\\location_data_karlee.csv")
+  location <- location %>%
+    filter(airport == "ending_airport")
+  lat <- location[,2]
+  lon <- location[,3]
+  
+  CF <- data.frame(totalPath(df1,df2,lat,lon))
   
   plot2 <- ggplot(CF, aes(lon, lat, color= factor(group))) +  
     ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
@@ -609,10 +542,13 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
 
 
 RDU <- combineData(35.8801,-78.7880,1)
-write.csv(RDU,"lfs\\karlee_RDU.csv")
-RDU1 <- read.csv("lfs\\karlee_RDU.csv")
+write.csv(RDU,"/lfs/karlee_RDU.csv")
 MIA <- combineData(25.7617,-80.1918,1)
-write.csv(RDU,"\lfs\\karlee_RDU.csv")
+write.csv(MIA,"lfs\\karlee_MIA.csv")
 
-finalAnswer <- totalFunction(RDU,MIA,0,1)
-warnings()
+finalAnswer <- totalFunction(RDU,MIA,2,1)
+
+RDU <- cbind(RDU,airport = "RDU")
+MIA <- cbind(MIA,airport = "MIA")
+airport_data <- rbind(RDU,MIA)
+write.csv(airport_data,"lfs\\airport_data_karlee.csv")
