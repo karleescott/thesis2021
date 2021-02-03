@@ -486,7 +486,8 @@ totalPath <- function(df1,df2,lat,lon){
 
 #returns full data of all routes, returns data with "best route", returns plots of all routes and best route
 totalFunction <- function(starting_airport,ending_airport,startingTime,threshold){
-  airport_data <- read.csv("lfs\\airport_data_karlee.csv")
+  airport_data <- read.csv("thesis2021//airport_data_karlee.csv")
+  airport_data <- airport_data[,-1]
   df1 <- airport_data %>%
     filter(airport == starting_airport & time_of_day == "startingTime")
   df1 <- df1[,-5]
@@ -542,13 +543,11 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
 
 
 RDU <- combineData(35.8801,-78.7880,1)
-write.csv(RDU,"/lfs/karlee_RDU.csv")
 MIA <- combineData(25.7617,-80.1918,1)
-write.csv(MIA,"lfs\\karlee_MIA.csv")
-
-finalAnswer <- totalFunction(RDU,MIA,2,1)
 
 RDU <- cbind(RDU,airport = "RDU")
 MIA <- cbind(MIA,airport = "MIA")
 airport_data <- rbind(RDU,MIA)
 write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
+
+finalAnswer <- totalFunction(RDU,MIA,2,1)
