@@ -430,13 +430,13 @@ combineData <- function(lat,lon,threshold){
 closest_path <- function(fun,lat,lon){
   dis <- 10000
   for(r in 1:nrow(fun)){
-    dis1 <- sqrt((fun[r,3]-lat)^2+(fun[r,4]-lon)^2)
+    dis1 <- sqrt((fun[r,3]-lon)^2+(fun[r,4]-lat)^2)
     if(dis1<dis){
       dis <- dis1
       loc <- r
     }
   }
-  info <- c(dis,r)
+  info <- c(dis,loc)
 }
 
 totalPath <- function(df1,df2,lat,lon){
@@ -459,8 +459,8 @@ totalPath <- function(df1,df2,lat,lon){
   #which path from ending airport gets closest to the point above
   fun1 <- df2 %>%
     filter(group == min(df2$group))
-  lat1 <- fun1[info[2],3]
-  lon1 <- fun1[info[2],4]
+  lon1 <- fun[info[2],3]
+  lat1 <- fun[info[2],4]
   info1 <- closest_path(fun1,lat1,lon1)
   for(n in min(df2$group):max(df2$group)){
     fun2 <- df2 %>%
@@ -474,6 +474,8 @@ totalPath <- function(df1,df2,lat,lon){
   
   fun <- fun[1:info[2],]
   fun1 <- fun1[1:info1[2],]
+  fun1 <- fun1 %>%
+    arrange(desc(tz))
   
   for(r in 1:nrow(fun1)){
     fun1[r,2] <- info[2]+r
@@ -485,10 +487,6 @@ totalPath <- function(df1,df2,lat,lon){
 
 #returns full data of all routes, returns data with "best route", returns plots of all routes and best route
 totalFunction <- function(starting_airport,ending_airport,startingTime,threshold){
-  #starting_airport <- "RDU"
-  #ending_airport <- "MIA"
-  #startingTime <- 2
- # threshold <- 1
   airport_data <- read.csv("thesis2021//airport_data_karlee.csv")
   airport_data <- airport_data[,-1]
   df1 <- airport_data %>%
@@ -524,7 +522,7 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
   conversion <- fortify(out)
   
   plot1 <- ggplot(data.frame(totalData), aes(lon, lat, color= factor(group))) +  
-    ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+    ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
     geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
   
   location <- read.csv("thesis2021//location_data_karlee.csv")
@@ -538,7 +536,7 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
   CF <- data.frame(totalPath(df1,df2,lat,lon))
   
   plot2 <- ggplot(CF, aes(lon, lat, color= factor(group))) +  
-    ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
+    ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
     geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
   
   finalAnswer <- list(CF, totalData, plot1, plot2)
@@ -564,3 +562,4 @@ write.csv(location,"thesis2021//location_data_karlee.csv")
 finalAnswer <- totalFunction("RDU","MIA",2,1)
 
 View(data.frame(finalAnswer[1]))
+finalAnswer[4]
