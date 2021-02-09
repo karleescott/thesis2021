@@ -527,7 +527,6 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
   
   location <- read.csv("thesis2021//location_data_karlee.csv")
   location <- location[,-1]
-  ending_airport <- "MIA"
   location <- location %>%
     filter(airport == ending_airport)
   lat <- as.numeric(location[,2])
@@ -559,7 +558,7 @@ location <- as.data.frame(cbind(airport, lat, lon))
 location <- transform(location, airport = as.character(airport), lat = as.numeric(as.character(lat)), lon = as.numeric(as.character(lon)))
 write.csv(location,"thesis2021//location_data_karlee.csv")
 
-finalAnswer <- totalFunction("RDU","MIA",2,1)
+finalAnswer <- totalFunction("MIA","RDU",0,1)
 
 View(data.frame(finalAnswer[1]))
 finalAnswer[4]
