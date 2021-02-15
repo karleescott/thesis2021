@@ -9,6 +9,9 @@ usdata <- read.csv("/lfs/karlee_combined_data.csv")
 
 #makes the data to be used in total Function. startTime is the hour of day (0-23)
 makeData <- function(lat,lon,startTime){ 
+  #lat <- 35.8801
+  #lon <- -78.7880
+  #startTime <- 0
   print(startTime)
   data <- usdata
   data <- data %>%
@@ -114,6 +117,14 @@ makeData <- function(lat,lon,startTime){
     }
   }
   data <- cbind(data, tz)
+  
+  tz_count <- table(data$tz)
+  tz_count <- as.data.frame(tz_count)
+  tz_count <- tz_count %>%
+    filter(Freq < 5)
+  cap <- as.numeric(as.character(tz_count[1,1]))
+  data <- data %>%
+    filter(tz < cap)
   
   #assign initial random group
   groups <- data.frame()
