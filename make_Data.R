@@ -563,7 +563,6 @@ RDU <- RDU[,-1]
 MIA <- cbind(MIA,airport = "MIA")
 airport_data <- rbind(RDU,MIA)
 write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
-
 airport <- c("RDU","MIA")
 lat <- c(35.8801,25.7617)
 lon <- c(-78.7880,-80.1918)
@@ -571,7 +570,7 @@ location <- as.data.frame(cbind(airport, lat, lon))
 location <- transform(location, airport = as.character(airport), lat = as.numeric(as.character(lat)), lon = as.numeric(as.character(lon)))
 write.csv(location,"thesis2021//location_data_karlee.csv")
 
-finalAnswer <- totalFunction("MIA","RDU",0,1)
+finalAnswer <- totalFunction("RDU","MIA",2,1)
 
 View(data.frame(finalAnswer[1]))
-finalAnswer[4]
+finalAnswer[3]
