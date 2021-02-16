@@ -555,10 +555,11 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
 }
 
 
-RDU <- combineData(35.8801,-78.7880,1)
-write.csv(RDU,"thesis2021//RDU.csv")
+RDU <- read.csv("thesis2021//RDU.csv")
+write.csv(MIA,"thesis2021//MIA.csv")
 MIA <- combineData(25.7617,-80.1918,1)
 RDU <- cbind(RDU,airport = "RDU")
+RDU <- RDU[,-1]
 MIA <- cbind(MIA,airport = "MIA")
 airport_data <- rbind(RDU,MIA)
 write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
