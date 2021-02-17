@@ -348,7 +348,7 @@ makeData2 <- function(lat,lon,startTime){
   
   #remove data that is a second flight form same icao24 (aka lands and then re take's off)
   grounddata <- data
-  
+  View(grounddata)
   grounddata_length <- nrow(grounddata)
   remove_list <- c()
   i <- 1
@@ -768,8 +768,11 @@ airport_data <- rbind(airport_data,RDU_arrive)
 write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
 location <- read.csv("thesis2021//location_data_karlee.csv")
+location <- location[,-1]
 location <- rbind(location, c("CHI",41.978611, -87.904724))
+location[,1] <- airport
 location <- transform(location, airport = as.character(airport), lat = as.numeric(as.character(lat)), lon = as.numeric(as.character(lon)))
+write.csv(location,"thesis2021//location_data_karlee.csv")
 
 CHI_arrive <- combineData(41.978611, -87.904724,"arrive",1)
 CHI_arrive <- cbind(CHI_arrive,airport = "CHI",arrive_depart = "arrive")
@@ -781,7 +784,7 @@ CHI_depart <- cbind(CHI_depart,airport = "CHI",arrive_depart = "depart")
 airport_data <- rbind(airport_data,CHI_depart)
 write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
-airport <- c("RDU","MIA")
+airport <- c("RDU","MIA","CHI")
 lat <- c(35.8801,25.7617)
 lon <- c(-78.7880,-80.1918)
 location <- as.data.frame(cbind(airport, lat, lon))
