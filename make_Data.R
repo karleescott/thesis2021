@@ -758,6 +758,28 @@ airport_data <- rbind(RDU,MIA)
 write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
 MIA_arrive <- combineData(25.7617,-80.1918,"arrive",1)
+MIA_arrive <- cbind(MIA_arrive,airport = "MIA",arrive_depart = "arrive")
+airport_data <- rbind(airport_data,MIA_arrive)
+write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
+
+RDU_arrive <- combineData(35.8801,-78.7880,"arrive",1)
+RDU_arrive <- cbind(RDU_arrive,airport = "RDU",arrive_depart = "arrive")
+airport_data <- rbind(airport_data,RDU_arrive)
+write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
+
+location <- read.csv("thesis2021//location_data_karlee.csv")
+location <- rbind(location, c("CHI",41.978611, -87.904724))
+location <- transform(location, airport = as.character(airport), lat = as.numeric(as.character(lat)), lon = as.numeric(as.character(lon)))
+
+CHI_arrive <- combineData(41.978611, -87.904724,"arrive",1)
+CHI_arrive <- cbind(CHI_arrive,airport = "CHI",arrive_depart = "arrive")
+airport_data <- rbind(airport_data,CHI_arrive)
+write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
+
+CHI_depart <- combineData(41.978611, -87.904724,"depart",1)
+CHI_depart <- cbind(CHI_depart,airport = "CHI",arrive_depart = "depart")
+airport_data <- rbind(airport_data,CHI_depart)
+write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
 airport <- c("RDU","MIA")
 lat <- c(35.8801,25.7617)
