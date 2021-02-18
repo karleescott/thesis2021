@@ -163,7 +163,7 @@ makeData <- function(lat,lon,startTime){
   data[,4] <- as.numeric(as.character(data[,4]))
   
   #remove data that is a second flight from same icao24 (aka lands and then re take's off)
-  for(i in 1:nrow(res)){
+  for(i in 1:length(res)){
     data1 <- data %>%
       filter(icao24 == res[i])
     j <- 1
@@ -338,7 +338,7 @@ makeData2 <- function(lat,lon,startTime){
   data[,4] <- as.numeric(as.character(data[,4]))
   
   #remove data that is a second flight form same icao24 (aka lands and then re take's off)
-  for(i in 1:nrow(res)){
+  for(i in 1:length(res)){
     data1 <- data %>%
       filter(icao24 == res[i])
     j <- nrow(data1)
@@ -359,6 +359,7 @@ makeData2 <- function(lat,lon,startTime){
 }
 
 makeCluster <- function(data) {
+  head(data)
   numclusters <- length(unique(data$group))
   groups <- sort(unique(data$group))
   for(r in 1:nrow(data)){
@@ -739,9 +740,16 @@ MIA <- cbind(MIA,airport = "MIA")
 airport_data <- rbind(RDU,MIA)
 write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
+
 MIA_arrive <- combineData(25.7617,-80.1918,"arrive",1)
 MIA_arrive <- cbind(MIA_arrive,airport = "MIA",arrive_depart = "arrive")
-airport_data <- rbind(airport_data,MIA_arrive)
+write.csv(MIA_arrive,"thesis2021//MIA_arrive.csv")
+
+MIA_depart <- combineData(25.7617,-80.1918,"depart",1)
+MIA_depart <- cbind(MIA_depart,airport = "MIA",arrive_depart = "depart")
+MIA_arrive <- read.csv("thesis2021//MIA_arrive.csv")
+MIA_arrive <- MIA_arrive[,-1]
+airport_data <- rbind(MIA_arrive,MIA_depart)
 write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
 RDU_arrive <- combineData(35.8801,-78.7880,"arrive",1)
@@ -749,12 +757,10 @@ RDU_arrive <- cbind(RDU_arrive,airport = "RDU",arrive_depart = "arrive")
 airport_data <- rbind(airport_data,RDU_arrive)
 write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
-location <- read.csv("thesis2021//location_data_karlee.csv")
-location <- location[,-1]
-location <- rbind(location, c("CHI",41.978611, -87.904724))
-location[,1] <- airport
-location <- transform(location, airport = as.character(airport), lat = as.numeric(as.character(lat)), lon = as.numeric(as.character(lon)))
-write.csv(location,"thesis2021//location_data_karlee.csv")
+RDU_depart <- combineData(35.8801,-78.7880,"depart",1)
+RDU_depart <- cbind(RDU_depart,airport = "RDU",arrive_depart = "depart")
+airport_data <- rbind(airport_data,RDU_depart)
+write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
 CHI_arrive <- combineData(41.978611, -87.904724,"arrive",1)
 CHI_arrive <- cbind(CHI_arrive,airport = "CHI",arrive_depart = "arrive")
