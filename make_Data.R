@@ -162,32 +162,23 @@ makeData <- function(lat,lon,startTime){
   data[,3] <- as.numeric(as.character(data[,3]))
   data[,4] <- as.numeric(as.character(data[,4]))
   
-  #remove data that is a second flight form same icao24 (aka lands and then re take's off)
-  grounddata <- data
-  
-  grounddata_length <- nrow(grounddata)
-  remove_list <- c()
-  i <- 1
-  while(i <= grounddata_length){
-    id_name <- grounddata[i,2]
-    if(grounddata[i,5] == "True" & grounddata[i,6] > 1){
-      remove_list <- append(i,remove_list)
-      i <- i + 1
-      id_name1 <- grounddata[i,2]
-      while(id_name == id_name1){
-        remove_list <- append(i,remove_list)
-        id_name <- grounddata[i,2]
-        i <- i + 1
-        id_name1 <- grounddata[i,2]
+  #remove data that is a second flight from same icao24 (aka lands and then re take's off)
+  for(i in 1:nrow(res)){
+    data1 <- data %>%
+      filter(icao24 == res[i])
+    j <- 1
+    while(j <= nrow(data1)){
+      if(data1[j,"onground"] == "TRUE" & data1[j,6] > 1){
+        last_time <- data1[j,"tz"] 
+        j <- nrow(data1) + 1
+      } else{
+        j <- j + 1
+        last_time <- data1[j,"tz"] 
       }
     }
-    i <- i + 1
-  }
-  
-  if(is.null(remove_list) == "FALSE"){  
-    data <- grounddata[-(remove_list),]
-  }
-  data <- data[,-5]
+    data <- data[!(data$icao24 == res[i] & data$tz > last_time),]
+    }
+    
   
   return(data)
 }
@@ -347,31 +338,22 @@ makeData2 <- function(lat,lon,startTime){
   data[,4] <- as.numeric(as.character(data[,4]))
   
   #remove data that is a second flight form same icao24 (aka lands and then re take's off)
-  grounddata <- data
-  View(grounddata)
-  grounddata_length <- nrow(grounddata)
-  remove_list <- c()
-  i <- 1
-  while(i <= grounddata_length){
-    id_name <- grounddata[i,2]
-    if(grounddata[i,5] == "True" & grounddata[i,6] > 1){
-      remove_list <- append(i,remove_list)
-      i <- i + 1
-      id_name1 <- grounddata[i,2]
-      while(id_name == id_name1){
-        remove_list <- append(i,remove_list)
-        id_name <- grounddata[i,2]
-        i <- i + 1
-        id_name1 <- grounddata[i,2]
+  for(i in 1:nrow(res)){
+    data1 <- data %>%
+      filter(icao24 == res[i])
+    j <- nrow(data1)
+    while(j >= 1){
+      if(data1[j,"onground"] == "TRUE" & data1[j,6] > 1){
+        first_time <- data1[j,"tz"] 
+        j <- 0
+      } else{
+        j <- j - 1
+        first_time <- data1[j,"tz"] 
       }
     }
-    i <- i + 1
+    data <- data[!(data$icao24 == res[i] & data$tz < first_time),]
   }
-  
-  if(is.null(remove_list) == "FALSE"){  
-    data <- grounddata[-(remove_list),]
-  }
-  data <- data[,-5]
+
   
   return(data)
 }
