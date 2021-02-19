@@ -691,12 +691,12 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
   airport_data <- read.csv("thesis2021//airport_data_karlee.csv")
   airport_data <- airport_data[,-1]
   df1 <- airport_data %>%
-    filter(airport == starting_airport & time_of_day == startingTime)
+    filter(airport == starting_airport & time_of_day == startingTime & arrive_depart == "depart")
   df1 <- df1[,-5]
   df1 <- df1[,-5]
   
   df2 <- airport_data %>%
-    filter(airport == ending_airport & time_of_day == startingTime)
+    filter(airport == ending_airport & time_of_day == startingTime & arrive_depart == "arrive")
   df2 <- df2[,-5]
   df2 <- df2[,-5]
   
