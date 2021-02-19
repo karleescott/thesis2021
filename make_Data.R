@@ -109,15 +109,16 @@ makeData <- function(lat,lon,startTime){
       filter(icao24 == res[i])
     j <- 1
     while(j <= nrow(data1)){
-      if(data1[j,"onground"] == "TRUE" & data1[j,6] > 1){
+      if(data1[j,"onground"] == "TRUE" & data1[j,"distance"] > 1){
         last_time <- data1[j,"time"] 
         j <- nrow(data1) + 1
       } else{
-        j <- j + 1
         last_time <- data1[j,"time"] 
+        j <- j + 1
       }
     }
     data <- data[!(data$icao24 == res[i] & data$time > last_time),]
+    View(data)
   }
   
   #change times to start at 1
@@ -291,12 +292,13 @@ makeData2 <- function(lat,lon,startTime){
         first_time <- data1[j,"time"] 
         j <- 0
       } else{
-        j <- j - 1
         first_time <- data1[j,"time"] 
+        j <- j - 1
       }
     }
     data <- data[!(data$icao24 == res[i] & data$time < first_time),]
   }
+  View(data)
   
   #change times to start at 1
   data <- data %>%
