@@ -12,6 +12,9 @@ makeData <- function(lat,lon,startTime){
   #lat <- 35.8801
   #lon <- -78.7880
   #startTime <- 0
+  lat <- 35.8801
+  lon <- -78.7880
+  startTime <- 0
   print(startTime)
   data <- usdata
   data <- data %>%
@@ -28,7 +31,7 @@ makeData <- function(lat,lon,startTime){
   #distance from RDU
   distance <- c()
   for(row in 1:nrow(data)){
-    distance[row] <- sqrt((as.numeric(as.character(data[row,3]))-(lon))^2 + (as.numeric(as.character(data[row,4]))-(lat))^2)
+    distance[row] <- sqrt((as.numeric(as.character(data[row,"lon"]))-(lon))^2 + (as.numeric(as.character(data[row,"lat"]))-(lat))^2)
   }
   
   data <- cbind(data, distance)
@@ -37,7 +40,7 @@ makeData <- function(lat,lon,startTime){
   list = c()
   i = 1
   for (row in 1:nrow(data)){
-    if(data[row,6] <= 1) {
+    if(data[row,"distance"] <= 1) {
       list[i] <- as.character(data[row,2])
       i <- i + 1
     }
@@ -83,7 +86,7 @@ makeData <- function(lat,lon,startTime){
   st <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(as.character(data[r,2]) == as.character(start[i,1])){
+    if(as.character(data[r,"icao24"]) == as.character(start[i,1])){
       st[r] <- as.numeric(as.character(start[i,2]))
     }
     else{
@@ -96,7 +99,7 @@ makeData <- function(lat,lon,startTime){
   
   #remove all times prior to start time
   #if the plane takes more than one route through the area, this approach might delete previous routes
-  data[,1] <- as.numeric(as.character(data[,1]))
+  data[,"time"] <- as.numeric(as.character(data[,"time"]))
   data <- data %>%
     filter(time>=st)
   
@@ -118,7 +121,6 @@ makeData <- function(lat,lon,startTime){
       }
     }
     data <- data[!(data$icao24 == res[i] & data$time > last_time),]
-    View(data)
   }
   
   #change times to start at 1
@@ -128,7 +130,7 @@ makeData <- function(lat,lon,startTime){
   tz <- c(1)
   i = 1
   for(r in 2:nrow(data)){
-    if(as.character(data[r-1,2]) == as.character(data[r,2])){
+    if(as.character(data[r-1,"icao24"]) == as.character(data[r,"icao24"])){
       i <- i + 1
       tz[r] <- i
     }
@@ -138,14 +140,6 @@ makeData <- function(lat,lon,startTime){
     }
   }
   data <- cbind(data, tz)
-  
-  tz_count <- table(data$tz)
-  tz_count <- as.data.frame(tz_count)
-  tz_count <- tz_count %>%
-    filter(Freq < 5)
-  cap <- as.numeric(as.character(tz_count[1,1]))
-  data <- data %>%
-    filter(tz < cap)
   
   #assign initial random group
   groups <- data.frame()
@@ -169,7 +163,7 @@ makeData <- function(lat,lon,startTime){
   group <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(as.character(data[r,2]) == as.character(fundata[i,1])){
+    if(as.character(data[r,"icao24"]) == as.character(fundata[i,1])){
       group[r] <- fundata[i,2]
     }
     else{
@@ -184,9 +178,20 @@ makeData <- function(lat,lon,startTime){
   data[,4] <- as.numeric(as.character(data[,4]))
   
   
+  for(n in 1:numclusters){
+    data1 <- data %>%
+      filter(group == n)
+    tz_count <- table(data1$tz)
+    tz_count <- as.data.frame(tz_count)
+    tz_count <- tz_count %>%
+      filter(Freq < 5)
+    cap <- as.numeric(as.character(tz_count[1,1]))
+    data <- data[!(data$group==n & data$tz>=cap),]
+  }
+  
   return(data)
 }
-
+  
 makeData2 <- function(lat,lon,startTime){ 
   #lat <- 35.8801
   #lon <- -78.7880
@@ -207,7 +212,7 @@ makeData2 <- function(lat,lon,startTime){
   #distance from RDU
   distance <- c()
   for(row in 1:nrow(data)){
-    distance[row] <- sqrt((as.numeric(as.character(data[row,3]))-(lon))^2 + (as.numeric(as.character(data[row,4]))-(lat))^2)
+    distance[row] <- sqrt((as.numeric(as.character(data[row,"lon"]))-(lon))^2 + (as.numeric(as.character(data[row,"lat"]))-(lat))^2)
   }
   
   data <- cbind(data, distance)
@@ -216,7 +221,7 @@ makeData2 <- function(lat,lon,startTime){
   list = c()
   i = 1
   for (row in 1:nrow(data)){
-    if(data[row,6] <= 1) {
+    if(data[row,"distance"] <= 1) {
       list[i] <- as.character(data[row,2])
       i <- i + 1
     }
@@ -262,7 +267,7 @@ makeData2 <- function(lat,lon,startTime){
   st <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(as.character(data[r,2]) == as.character(start[i,1])){
+    if(as.character(data[r,"icao24"]) == as.character(start[i,1])){
       st[r] <- as.numeric(as.character(start[i,2]))
     }
     else{
@@ -275,7 +280,7 @@ makeData2 <- function(lat,lon,startTime){
   
   #remove all times after start time
   #if the plane takes more than one route through the area, this approach might delete previous routes
-  data[,1] <- as.numeric(as.character(data[,1]))
+  data[,"time"] <- as.numeric(as.character(data[,"time"]))
   data <- data %>%
     filter(time<=st)
   
@@ -307,7 +312,7 @@ makeData2 <- function(lat,lon,startTime){
   tz <- c(1)
   i = 1
   for(r in 2:nrow(data)){
-    if(as.character(data[r-1,2]) == as.character(data[r,2])){
+    if(as.character(data[r-1,"icao24"]) == as.character(data[r,"icao24"])){
       i <- i + 1
       tz[r] <- i
     }
@@ -317,14 +322,6 @@ makeData2 <- function(lat,lon,startTime){
     }
   }
   data <- cbind(data, tz)
-  
-  tz_count <- table(data$tz)
-  tz_count <- as.data.frame(tz_count)
-  tz_count <- tz_count %>%
-    filter(Freq < 5)
-  cap <- as.numeric(as.character(tz_count[1,1]))
-  data <- data %>%
-    filter(tz < cap)
   
   #assign initial random group
   groups <- data.frame()
@@ -348,7 +345,7 @@ makeData2 <- function(lat,lon,startTime){
   group <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(as.character(data[r,2]) == as.character(fundata[i,1])){
+    if(as.character(data[r,"icao24"]) == as.character(fundata[i,1])){
       group[r] <- fundata[i,2]
     }
     else{
@@ -361,17 +358,27 @@ makeData2 <- function(lat,lon,startTime){
   data[,2] <- as.character(data[,2])
   data[,3] <- as.numeric(as.character(data[,3]))
   data[,4] <- as.numeric(as.character(data[,4]))
-
+  
+  
+  for(n in 1:numclusters){
+    data1 <- data %>%
+      filter(group == n)
+    tz_count <- table(data1$tz)
+    tz_count <- as.data.frame(tz_count)
+    tz_count <- tz_count %>%
+      filter(Freq < 5)
+    cap <- as.numeric(as.character(tz_count[1,1]))
+    data <- data[!(data$group==n & data$tz>=cap),]
+  }
   
   return(data)
 }
 
 makeCluster <- function(data) {
-  head(data)
-  numclusters <- length(unique(data$group))
+  numclusters <- as.numeric(length(unique(data$group)))
   groups <- sort(unique(data$group))
   for(r in 1:nrow(data)){
-    data[r,8] <- match(data[r,8],groups)
+    data[r,"group"] <- match(data[r,"group"],groups)
   }
   #create mean functions
   fun <- data.frame()
@@ -384,8 +391,8 @@ makeCluster <- function(data) {
     for(i in 1:max(data1$tz)){
       data2 <- data1 %>%
         filter(tz == i)
-      data2[,3] <- as.numeric(as.character(data2[,3]))
-      data2[,4] <- as.numeric(as.character(data2[,4]))
+      data2[,"lon"] <- as.numeric(as.character(data2[,"lon"]))
+      data2[,"lat"] <- as.numeric(as.character(data2[,"lat"]))
       fun[i + j,1] <- n
       fun[i + j,2] <- i
       fun[i + j,3] <- mean(data2$lon)
