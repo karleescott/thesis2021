@@ -100,6 +100,26 @@ makeData <- function(lat,lon,startTime){
   data <- data %>%
     filter(time>=st)
   
+  #remove data that is a second flight from same icao24 (aka lands and then re take's off)
+  data <- data %>%
+    arrange(icao24, time)
+  
+  for(i in 1:length(res)){
+    data1 <- data %>%
+      filter(icao24 == res[i])
+    j <- 1
+    while(j <= nrow(data1)){
+      if(data1[j,"onground"] == "TRUE" & data1[j,6] > 1){
+        last_time <- data1[j,"time"] 
+        j <- nrow(data1) + 1
+      } else{
+        j <- j + 1
+        last_time <- data1[j,"time"] 
+      }
+    }
+    data <- data[!(data$icao24 == res[i] & data$time > last_time),]
+  }
+  
   #change times to start at 1
   data <- data %>%
     arrange(icao24, time)
@@ -162,23 +182,6 @@ makeData <- function(lat,lon,startTime){
   data[,3] <- as.numeric(as.character(data[,3]))
   data[,4] <- as.numeric(as.character(data[,4]))
   
-  #remove data that is a second flight from same icao24 (aka lands and then re take's off)
-  for(i in 1:length(res)){
-    data1 <- data %>%
-      filter(icao24 == res[i])
-    j <- 1
-    while(j <= nrow(data1)){
-      if(data1[j,"onground"] == "TRUE" & data1[j,6] > 1){
-        last_time <- data1[j,"tz"] 
-        j <- nrow(data1) + 1
-      } else{
-        j <- j + 1
-        last_time <- data1[j,"tz"] 
-      }
-    }
-    data <- data[!(data$icao24 == res[i] & data$tz > last_time),]
-    }
-    
   
   return(data)
 }
@@ -275,6 +278,26 @@ makeData2 <- function(lat,lon,startTime){
   data <- data %>%
     filter(time<=st)
   
+  #remove data that is a second flight form same icao24 (aka lands and then re take's off)
+  data <- data %>%
+    arrange(icao24, time)
+  
+  for(i in 1:length(res)){
+    data1 <- data %>%
+      filter(icao24 == res[i])
+    j <- nrow(data1)
+    while(j >= 1){
+      if(data1[j,"onground"] == "TRUE" & data1[j,6] > 1){
+        first_time <- data1[j,"time"] 
+        j <- 0
+      } else{
+        j <- j - 1
+        first_time <- data1[j,"time"] 
+      }
+    }
+    data <- data[!(data$icao24 == res[i] & data$time < first_time),]
+  }
+  
   #change times to start at 1
   data <- data %>%
     arrange(icao24, time)
@@ -336,23 +359,6 @@ makeData2 <- function(lat,lon,startTime){
   data[,2] <- as.character(data[,2])
   data[,3] <- as.numeric(as.character(data[,3]))
   data[,4] <- as.numeric(as.character(data[,4]))
-  
-  #remove data that is a second flight form same icao24 (aka lands and then re take's off)
-  for(i in 1:length(res)){
-    data1 <- data %>%
-      filter(icao24 == res[i])
-    j <- nrow(data1)
-    while(j >= 1){
-      if(data1[j,"onground"] == "TRUE" & data1[j,6] > 1){
-        first_time <- data1[j,"tz"] 
-        j <- 0
-      } else{
-        j <- j - 1
-        first_time <- data1[j,"tz"] 
-      }
-    }
-    data <- data[!(data$icao24 == res[i] & data$tz < first_time),]
-  }
 
   
   return(data)
