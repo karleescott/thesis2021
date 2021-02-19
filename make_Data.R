@@ -12,9 +12,6 @@ makeData <- function(lat,lon,startTime){
   #lat <- 35.8801
   #lon <- -78.7880
   #startTime <- 0
-  lat <- 35.8801
-  lon <- -78.7880
-  startTime <- 0
   print(startTime)
   data <- usdata
   data <- data %>%
