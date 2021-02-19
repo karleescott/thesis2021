@@ -303,7 +303,6 @@ makeData2 <- function(lat,lon,startTime){
     }
     data <- data[!(data$icao24 == res[i] & data$time < first_time),]
   }
-  View(data)
   
   #change times to start at 1
   data <- data %>%
@@ -403,23 +402,24 @@ makeCluster <- function(data) {
   colnames(fun) = c("group", "tz", "lon", "lat")
   
   #find squared distance between each point and the mean functions at every tz (functions are different lengths?)
+  data_length <- ncol(data)
   for (r in 1:nrow(data)){
     for (n in 1:numclusters){
       data1 <- fun %>%
         filter(group == n)
-      if(max(data1$tz) < data[r,7]){
-        data[r,8+n] <- "NA"
+      if(max(data1$tz) < data[r,"tz"]){
+        data[r,data_length+n] <- "NA"
       }
       else{
         data2 <- data1 %>%
-          filter(tz == data[r,7])
-        data[r,8+n] <- (as.numeric(as.character(data[r,3]))-as.numeric(as.character(data2[1,3])))^2 + (as.numeric(as.character(data[r,4]))-as.numeric(as.character(data2[1,4])))^2
+          filter(tz == data[r,"tz"])
+        data[r,data_length+n] <- (as.numeric(as.character(data[r,"lon"]))-as.numeric(as.character(data2[1,"lon"])))^2 + (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
       }
     }  
   }
     
   #re-define res
-  list <- data[,2]
+  list <- data[,"icao24"]
   res <- c()
   i = 1
   for (j in list){ 
@@ -440,7 +440,7 @@ makeCluster <- function(data) {
     data1 <- data %>%
       filter(icao24 == res[i])
     for(n in 1:numclusters){
-      data2 <- as.numeric(as.character(data1[,8+n]))
+      data2 <- as.numeric(as.character(data1[,data_length+n]))
       data2 <- na.omit(data2)
       avdis[j,1] <- res[i]
       avdis[j,2] <- n
@@ -500,7 +500,7 @@ makeCluster <- function(data) {
   group <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(data[r,2] == highli[i,1]){
+    if(data[r,"icao24"] == highli[i,1]){
       group[r] <- highli[i,2]
     }
     else{
@@ -508,7 +508,7 @@ makeCluster <- function(data) {
       group[r] <- highli[i,2]
     }
   }
-  data[,8] <- group
+  data[,data_length] <- group
   everything <- list(data, fun, sd, likelihoods)
   return(everything)
 }
