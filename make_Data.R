@@ -762,7 +762,8 @@ MIA_depart <- cbind(MIA_depart,airport = "MIA",arrive_depart = "depart")
 MIA_arrive <- read.csv("thesis2021//MIA_arrive.csv")
 MIA_arrive <- MIA_arrive[,-1]
 airport_data <- rbind(MIA_arrive,MIA_depart)
-write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
+airport_data <- read.csv("thesis2021//airport_data_karlee.csv")
+airport_data <- airport_data[,-1]
 
 RDU_arrive <- combineData(35.8801,-78.7880,"arrive",1)
 RDU_arrive <- cbind(RDU_arrive,airport = "RDU",arrive_depart = "arrive")
