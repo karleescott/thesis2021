@@ -11,7 +11,7 @@ if (interactive()) {
     closest_path <- function(fun,lat,lon){
       dis <- 10000
       for(r in 1:nrow(fun)){
-        dis1 <- sqrt((fun[r,3]-lon)^2+(fun[r,4]-lat)^2)
+        dis1 <- sqrt((fun[r,"lon"]-lon)^2+(fun[r,"lat"]-lat)^2)
         if(dis1<dis){
           dis <- dis1
           loc <- r
@@ -54,9 +54,7 @@ if (interactive()) {
       }
       
       fun <- fun[1:info[2],]
-      fun1 <- fun1[1:info1[2],]
-      fun1 <- fun1 %>%
-        arrange(desc(tz))
+      fun1 <- fun1[info1[2]:nrow(fun1),]
       
       for(r in 1:nrow(fun1)){
         fun1[r,2] <- info[2]+r
@@ -110,8 +108,8 @@ if (interactive()) {
       location <- location[,-1]
       location <- location %>%
         filter(airport == ending_airport)
-      lat <- as.numeric(location[,2])
-      lon <- location[,3]
+      lat <- as.numeric(location[,"lat"])
+      lon <- location[,"lon"]
       
       CF <- data.frame(totalPath(df1,df2,lat,lon))
       
@@ -123,6 +121,7 @@ if (interactive()) {
       
       return(finalAnswer)
     }
+    
   }
   
   # Define UI
@@ -130,11 +129,11 @@ if (interactive()) {
     sidebarLayout(
         sidebarPanel(
           selectInput("starting_airport", "Starting Airport:",
-                c("MIA","RDU")),
+                c("MIA","RDU","CHI")),
           textOutput("SA"),
           br(),
           selectInput("ending_airport", "Ending Airport:",
-                c("MIA","RDU")),
+                c("MIA","RDU","CHI")),
           textOutput("EA"),
           br(),
           selectInput("startingTime", "Departure Time:",
@@ -199,6 +198,7 @@ if (interactive()) {
       finalAnswer <- totalFunction(input$starting_airport,input$ending_airport,time_of_day,1)
       route <- as.data.frame(finalAnswer[1])
       route <- route[,-1]
+      route <- route[,-4]
       colnames(route) <- c("Order of Travel","Longitude","Latitude")
       return(route)
     })

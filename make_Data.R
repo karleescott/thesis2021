@@ -628,7 +628,7 @@ combineData <- function(lat,lon,arrive_depart,threshold){
 closest_path <- function(fun,lat,lon){
   dis <- 10000
   for(r in 1:nrow(fun)){
-    dis1 <- sqrt((fun[r,3]-lon)^2+(fun[r,4]-lat)^2)
+    dis1 <- sqrt((fun[r,"lon"]-lon)^2+(fun[r,"lat"]-lat)^2)
     if(dis1<dis){
       dis <- dis1
       loc <- r
@@ -671,9 +671,7 @@ totalPath <- function(df1,df2,lat,lon){
   }
   
   fun <- fun[1:info[2],]
-  fun1 <- fun1[1:info1[2],]
-  fun1 <- fun1 %>%
-    arrange(desc(tz))
+  fun1 <- fun1[info1[2]:nrow(fun1),]
   
   for(r in 1:nrow(fun1)){
     fun1[r,2] <- info[2]+r
@@ -698,7 +696,7 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
   df2 <- df2[,-5]
   
   numclusters <- length(unique(df1$group))
-    
+  
   for(i in 1:nrow(df2)){
     df2[i,1] <- df2[i,1] + numclusters
   }
@@ -727,8 +725,8 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
   location <- location[,-1]
   location <- location %>%
     filter(airport == ending_airport)
-  lat <- as.numeric(location[,2])
-  lon <- location[,3]
+  lat <- as.numeric(location[,"lat"])
+  lon <- location[,"lon"]
   
   CF <- data.frame(totalPath(df1,df2,lat,lon))
   
@@ -792,7 +790,7 @@ location <- as.data.frame(cbind(airport, lat, lon))
 location <- transform(location, airport = as.character(airport), lat = as.numeric(as.character(lat)), lon = as.numeric(as.character(lon)))
 write.csv(location,"thesis2021//location_data_karlee.csv")
 
-finalAnswer <- totalFunction("RDU","MIA",2,1)
+finalAnswer <- totalFunction("CHI","MIA",2,1)
 
-View(data.frame(finalAnswer[1]))
+View(data.frame(finalAnswer[2]))
 finalAnswer[3]
