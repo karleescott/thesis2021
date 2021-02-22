@@ -794,3 +794,4 @@ finalAnswer <- totalFunction("CHI","MIA",2,1)
 
 View(data.frame(finalAnswer[2]))
 finalAnswer[3]
+#hi
