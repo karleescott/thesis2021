@@ -54,7 +54,9 @@ if (interactive()) {
       }
       
       fun <- fun[1:info[2],]
-      fun1 <- fun1[info1[2]:nrow(fun1),]
+      fun1 <- fun1[1:info1[2],]
+      fun1 <- fun1 %>%
+        arrange(desc(tz))
       
       for(r in 1:nrow(fun1)){
         fun1[r,2] <- info[2]+r
