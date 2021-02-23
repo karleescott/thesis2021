@@ -766,6 +766,7 @@ RDU_arrive <- combineData(35.8801,-78.7880,"arrive",1)
 RDU_arrive <- cbind(RDU_arrive,airport = "RDU",arrive_depart = "arrive")
 airport_data <- rbind(airport_data,RDU_arrive)
 write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
+airport_data <- airport_data[!(airport_data$airport=="RDU" & airport_data$arrive_depart=="arrive"),]
 
 RDU_depart <- combineData(35.8801,-78.7880,"depart",1)
 RDU_depart <- cbind(RDU_depart,airport = "RDU",arrive_depart = "depart")
