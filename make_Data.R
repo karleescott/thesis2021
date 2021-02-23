@@ -303,7 +303,7 @@ makeData2 <- function(lat,lon,startTime){
   
   #change times to start at 1
   data <- data %>%
-    arrange(icao24, time)
+    arrange(icao24, desc(time))
   
   tz <- c(1)
   i = 1
@@ -671,7 +671,7 @@ totalPath <- function(df1,df2,lat,lon){
   }
   
   fun <- fun[1:info[2],]
-  fun1 <- fun1[info1[2]:nrow(fun1),]
+  fun1 <- fun1[1:info[2],]
   
   for(r in 1:nrow(fun1)){
     fun1[r,2] <- info[2]+r
@@ -753,15 +753,12 @@ write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
 MIA_arrive <- combineData(25.7617,-80.1918,"arrive",1)
 MIA_arrive <- cbind(MIA_arrive,airport = "MIA",arrive_depart = "arrive")
-write.csv(MIA_arrive,"thesis2021//MIA_arrive.csv")
+
 
 MIA_depart <- combineData(25.7617,-80.1918,"depart",1)
 MIA_depart <- cbind(MIA_depart,airport = "MIA",arrive_depart = "depart")
-MIA_arrive <- read.csv("thesis2021//MIA_arrive.csv")
-MIA_arrive <- MIA_arrive[,-1]
-airport_data <- rbind(MIA_arrive,MIA_depart)
-airport_data <- read.csv("thesis2021//airport_data_karlee.csv")
-airport_data <- airport_data[,-1]
+airport_data <- rbind(airport_data,MIA_depart)
+write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
 RDU_arrive <- combineData(35.8801,-78.7880,"arrive",1)
 RDU_arrive <- cbind(RDU_arrive,airport = "RDU",arrive_depart = "arrive")
