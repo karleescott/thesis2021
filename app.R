@@ -67,7 +67,7 @@ if (interactive()) {
     }
     
     #returns full data of all routes, returns data with "best route", returns plots of all routes and best route
-    totalFunction <- function(starting_airport,ending_airport,startingTime,threshold){
+    totalFunction <- function(starting_airport,ending_airport,startingTime){
       airport_data <- read.csv("thesis2021//airport_data_karlee.csv")
       airport_data <- airport_data[,-1]
       df1 <- airport_data %>%
@@ -182,7 +182,7 @@ if (interactive()) {
       if(input$startingTime == "evening"){
         time_of_day <- 3
       }
-      finalAnswer <- totalFunction(input$starting_airport,input$ending_airport,time_of_day,1)
+      finalAnswer <- totalFunction(input$starting_airport,input$ending_airport,time_of_day)
       finalAnswer[4]
     })
     
@@ -197,7 +197,7 @@ if (interactive()) {
       if(input$startingTime == "evening"){
         time_of_day <- 3
       }
-      finalAnswer <- totalFunction(input$starting_airport,input$ending_airport,time_of_day,1)
+      finalAnswer <- totalFunction(input$starting_airport,input$ending_airport,time_of_day)
       route <- as.data.frame(finalAnswer[1])
       route <- route[,-1]
       route <- route[,-4]
