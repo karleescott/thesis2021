@@ -22,7 +22,7 @@ usdata_time <- usdata %>%
   filter(time == 1594598410)
 
 plot1 <- ggplot(usdata_time, aes(lon, lat, color= factor(icao24))) +  
-  ggtitle("Flight Locations on July 13th 2020 @ 0010") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_point() +
+  ggtitle("Flight Locations on July 13th 2020 @ 0010") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_point(show.legend = FALSE) +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 plot1
 
