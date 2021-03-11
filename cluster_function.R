@@ -412,7 +412,8 @@ combineData <- function(lat,lon,arrive_depart,threshold,numclusters){
     j <- j + 1
   }
   
-  data <- cbind(as.data.frame(everything1[2]),as.data.frame(everything1[4]),time_of_day = 0)
+  data <- cbind(as.data.frame(everything1[2]),time_of_day = 0)
+  likelihood <- as.data.frame(everything1[4])
   
   #for (i in 1:3){
     #if(arrive_depart == "depart"){
@@ -437,7 +438,8 @@ combineData <- function(lat,lon,arrive_depart,threshold,numclusters){
    # data <- rbind(data,data1)
     
   #}
-  return(data)
+  list <- list(data, likelihood)
+  return(list)
 }
 
 #2 clusters Chicago night
