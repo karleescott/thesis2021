@@ -4,23 +4,29 @@ library(raster)
 library(rgeos)
 library(ggplot2)
 
-firstdata <- read.csv("/data/ADSB/OpenSky/states_2020-07-13-00.csv")
+usdata <- read.csv("/lfs/karlee_combined_data.csv")
 
-makeData <- function(data, numclusters){ 
+#makes the data to be used in total Function. startTime is the hour of day (0-23)
+makeData <- function(lat,lon,startTime,numclusters){ 
+  #lat <- 35.8801
+  #lon <- -78.7880
+  #startTime <- 0
+  print(startTime)
+  data <- usdata
+  data <- data %>%
+    filter(time >= (1594598400+3600*6*(startTime)) & time < (1594598400+3600*6*(startTime+1)))
   #filter data
   data <- na.omit(data)
   data <- data %>%
-    filter(onground == "False")
-  data <- data %>%
     filter(lon >= -125 & lon <= -65 & lat >= 25 & lat <= 50)
-  data <- cbind(data$time,as.character(data$icao24),data$lon,data$lat)
+  data <- cbind(data$time,as.character(data$icao24),data$lon,data$lat,as.character(data$onground))
   data <- data.frame(data)
-  colnames(data) <- c("time", "icao24", "lon", "lat")
+  colnames(data) <- c("time", "icao24", "lon", "lat","onground")
   
   #distance from RDU
   distance <- c()
   for(row in 1:nrow(data)){
-    distance[row] <- sqrt((as.numeric(as.character(data[row,3]))-(-78.7880))^2 + (as.numeric(as.character(data[row,4]))-(35.8801))^2)
+    distance[row] <- sqrt((as.numeric(as.character(data[row,"lon"]))-(lon))^2 + (as.numeric(as.character(data[row,"lat"]))-(lat))^2)
   }
   
   data <- cbind(data, distance)
@@ -29,7 +35,7 @@ makeData <- function(data, numclusters){
   list = c()
   i = 1
   for (row in 1:nrow(data)){
-    if(data[row,5] <= 1) {
+    if(data[row,"distance"] <= 1) {
       list[i] <- as.character(data[row,2])
       i <- i + 1
     }
@@ -75,7 +81,7 @@ makeData <- function(data, numclusters){
   st <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(as.character(data[r,2]) == as.character(start[i,1])){
+    if(as.character(data[r,"icao24"]) == as.character(start[i,1])){
       st[r] <- as.numeric(as.character(start[i,2]))
     }
     else{
@@ -88,9 +94,29 @@ makeData <- function(data, numclusters){
   
   #remove all times prior to start time
   #if the plane takes more than one route through the area, this approach might delete previous routes
-  data[,1] <- as.numeric(as.character(data[,1]))
+  data[,"time"] <- as.numeric(as.character(data[,"time"]))
   data <- data %>%
     filter(time>=st)
+  
+  #remove data that is a second flight from same icao24 (aka lands and then re take's off)
+  data <- data %>%
+    arrange(icao24, time)
+  
+  for(i in 1:length(res)){
+    data1 <- data %>%
+      filter(icao24 == res[i])
+    j <- 1
+    while(j <= nrow(data1)){
+      if(data1[j,"onground"] == "TRUE" & data1[j,"distance"] > 1){
+        last_time <- data1[j,"time"] 
+        j <- nrow(data1) + 1
+      } else{
+        last_time <- data1[j,"time"] 
+        j <- j + 1
+      }
+    }
+    data <- data[!(data$icao24 == res[i] & data$time > last_time),]
+  }
   
   #change times to start at 1
   data <- data %>%
@@ -99,7 +125,7 @@ makeData <- function(data, numclusters){
   tz <- c(1)
   i = 1
   for(r in 2:nrow(data)){
-    if(as.character(data[r-1,2]) == as.character(data[r,2])){
+    if(as.character(data[r-1,"icao24"]) == as.character(data[r,"icao24"])){
       i <- i + 1
       tz[r] <- i
     }
@@ -132,7 +158,7 @@ makeData <- function(data, numclusters){
   group <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(as.character(data[r,2]) == as.character(fundata[i,1])){
+    if(as.character(data[r,"icao24"]) == as.character(fundata[i,1])){
       group[r] <- fundata[i,2]
     }
     else{
@@ -145,11 +171,28 @@ makeData <- function(data, numclusters){
   data[,2] <- as.character(data[,2])
   data[,3] <- as.numeric(as.character(data[,3]))
   data[,4] <- as.numeric(as.character(data[,4]))
+  
+  
+  for(n in 1:numclusters){
+    data1 <- data %>%
+      filter(group == n)
+    tz_count <- table(data1$tz)
+    tz_count <- as.data.frame(tz_count)
+    tz_count <- tz_count %>%
+      filter(Freq < 5)
+    cap <- as.numeric(as.character(tz_count[1,1]))
+    data <- data[!(data$group==n & data$tz>=cap),]
+  }
+  
   return(data)
 }
 
-
-makeCluster <- function(data, numclusters) {
+makeCluster <- function(data) {
+  numclusters <- as.numeric(length(unique(data$group)))
+  groups <- sort(unique(data$group))
+  for(r in 1:nrow(data)){
+    data[r,"group"] <- match(data[r,"group"],groups)
+  }
   #create mean functions
   fun <- data.frame()
   data <- data %>%
@@ -161,8 +204,8 @@ makeCluster <- function(data, numclusters) {
     for(i in 1:max(data1$tz)){
       data2 <- data1 %>%
         filter(tz == i)
-      data2[,3] <- as.numeric(as.character(data2[,3]))
-      data2[,4] <- as.numeric(as.character(data2[,4]))
+      data2[,"lon"] <- as.numeric(as.character(data2[,"lon"]))
+      data2[,"lat"] <- as.numeric(as.character(data2[,"lat"]))
       fun[i + j,1] <- n
       fun[i + j,2] <- i
       fun[i + j,3] <- mean(data2$lon)
@@ -173,23 +216,24 @@ makeCluster <- function(data, numclusters) {
   colnames(fun) = c("group", "tz", "lon", "lat")
   
   #find squared distance between each point and the mean functions at every tz (functions are different lengths?)
+  data_length <- ncol(data)
   for (r in 1:nrow(data)){
     for (n in 1:numclusters){
       data1 <- fun %>%
         filter(group == n)
-      if(max(data1$tz) < data[r,7]){
-        data[r,8+n] <- "NA"
+      if(max(data1$tz) < data[r,"tz"]){
+        data[r,data_length+n] <- "NA"
       }
       else{
         data2 <- data1 %>%
-          filter(tz == data[r,7])
-        data[r,8+n] <- (as.numeric(as.character(data[r,3]))-as.numeric(as.character(data2[1,3])))^2 + (as.numeric(as.character(data[r,4]))-as.numeric(as.character(data2[1,4])))^2
+          filter(tz == data[r,"tz"])
+        data[r,data_length+n] <- (as.numeric(as.character(data[r,"lon"]))-as.numeric(as.character(data2[1,"lon"])))^2 + (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
       }
     }  
   }
   
   #re-define res
-  list <- data[,2]
+  list <- data[,"icao24"]
   res <- c()
   i = 1
   for (j in list){ 
@@ -210,7 +254,7 @@ makeCluster <- function(data, numclusters) {
     data1 <- data %>%
       filter(icao24 == res[i])
     for(n in 1:numclusters){
-      data2 <- as.numeric(as.character(data1[,8+n]))
+      data2 <- as.numeric(as.character(data1[,data_length+n]))
       data2 <- na.omit(data2)
       avdis[j,1] <- res[i]
       avdis[j,2] <- n
@@ -270,7 +314,7 @@ makeCluster <- function(data, numclusters) {
   group <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(data[r,2] == highli[i,1]){
+    if(data[r,"icao24"] == highli[i,1]){
       group[r] <- highli[i,2]
     }
     else{
@@ -278,12 +322,15 @@ makeCluster <- function(data, numclusters) {
       group[r] <- highli[i,2]
     }
   }
-  data[,8] <- group
+  data[,data_length] <- group
   everything <- list(data, fun, sd, likelihoods)
   return(everything)
 }
 
-compareMean <- function(fun1, fun2, numclusters, threshold){
+
+#####roadblock 4 clusters turned into 3 (no data was assigned to group 1), now theres no function to compare it to.
+compareMean <- function(fun1, fun2, threshold){
+  numclusters = length(unique(fun2$group))
   #find squared distance between each time of the mean functions at every tz (functions are different lengths?)
   sqdist <- data.frame()
   for (r in 1:nrow(fun1)){
@@ -346,40 +393,55 @@ compareMean <- function(fun1, fun2, numclusters, threshold){
   return("True")
 }
 
-totalFunction <- function(data,numclusters,threshold){
-  data <- makeData(data,numclusters)
-  everything <- makeCluster(data,numclusters)
-  everything1 <- makeCluster(data.frame(everything[1]),numclusters)
+#all specified airport data for 13 July. Must be filtered by hour to use. 
+combineData <- function(lat,lon,arrive_depart,threshold,numclusters){
+  if(arrive_depart == "depart"){
+    data <- makeData(lat,lon,0,numclusters)}
+  else{
+    data <- makeData2(lat,lon,0,numclusters)
+  }
+  everything <- makeCluster(data)
+  everything1 <- makeCluster(data.frame(everything[1]))
   fun1 <- data.frame(everything[2])
   fun2 <- data.frame(everything1[2])
-  while(compareMean(fun1,fun2,numclusters,threshold) == "False"){
+  j <- 0
+  while(compareMean(fun1,fun2,threshold) == "False"|| j == 10){
     fun1 <- fun2
-    everything1 <- makeCluster(data.frame(everything1[1]),numclusters)
+    everything1 <- makeCluster(data.frame(everything1[1]))
     fun2 <- data.frame(everything1[2])
+    j <- j + 1
   }
-  return(everything1)
+  
+  data <- cbind(as.data.frame(everything1[2]),as.data.frame(everything1[4]),time_of_day = 0)
+  
+  #for (i in 1:3){
+    #if(arrive_depart == "depart"){
+     # data1 <- makeData(lat,lon,i,numclusters)}
+   # else{
+      #data1 <- makeData2(lat,lon,i,numclusters)
+   # }
+    #everything <- makeCluster(data1)
+    #everything2 <- makeCluster(data.frame(everything[1]))
+    #fun1 <- data.frame(everything[2])
+   # fun2 <- data.frame(everything2[2])
+   # j = 0
+   # while(compareMean(fun1,fun2,threshold) == "False" || j == 10){
+     # fun1 <- fun2
+     # everything2 <- makeCluster(data.frame(everything2[1]))
+     # fun2 <- data.frame(everything2[2])
+      #j <- j + 1
+  #  }
+    
+  #  data1 <- cbind(as.data.frame(everything2[2]),as.data.frame(everything2[4]),time_of_day = i)
+    
+   # data <- rbind(data,data1)
+    
+  #}
+  return(data)
 }
 
-# unzip the zipfile
-unzip(zipfile = "thesis2021/states_21basic.zip", 
-      exdir = 'states_21basic')
-
-# load the shapefile 
-map <- readOGR("states_21basic/states.shp")
-
-#crop the portion needed
-out <- crop(map, extent(-125, -65, 25, 50))
-
-conversion <- fortify(out)
-
-ggplot(data.frame(everything5[2]), aes(lon, lat, color= factor(group))) +  
-  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-90, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
-
-#Coersed NA on purpose, ignore errors. Takes about 5 minutes to run
-
-#2 clusters
-everything2 <- totalFunction(firstdata,2,1)
+#2 clusters Chicago night
+everything2 <- combineData(41.978611, -87.904724,"depart",1,2)
 j2 = 0
 likelihood2 = data.frame(everything2[4])
 i = 1
