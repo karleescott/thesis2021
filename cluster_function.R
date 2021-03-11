@@ -445,7 +445,7 @@ combineData <- function(lat,lon,arrive_depart,threshold,numclusters){
 #2 clusters Chicago night
 everything2 <- combineData(41.978611, -87.904724,"depart",1,2)
 j2 = 0
-likelihood2 = data.frame(everything2[4])
+likelihood2 <- data.frame(everything2[2])
 i = 1
 while(i < nrow(likelihood2)){
   j2 = j2 + log(max(likelihood2[i,3],likelihood2[i+1,3]))
@@ -453,9 +453,9 @@ while(i < nrow(likelihood2)){
 }
 
 #3 clusters
-everything3 <- totalFunction(firstdata,3,1)
+everything3 <- combineData(41.978611, -87.904724,"depart",1,3)
 j3 = 0
-likelihood3 = data.frame(everything3[4])
+likelihood3 = data.frame(everything3[2])
 i = 1
 while(i < nrow(likelihood3)){
   j3 = j3 + log(max(likelihood3[i,3],likelihood3[i+1,3],likelihood3[i+2,3]))
@@ -463,9 +463,9 @@ while(i < nrow(likelihood3)){
 }
 
 #4 clusters
-everything4 <- totalFunction(firstdata,4,1)
+everything4 <- combineData(41.978611, -87.904724,"depart",1,4)
 j4 = 0
-likelihood4 = data.frame(everything4[4])
+likelihood4 = data.frame(everything4[2])
 i = 1
 while(i < nrow(likelihood4)){
   j4 = j4 + log(max(likelihood4[i,3],likelihood4[i+1,3],likelihood4[i+2,3],likelihood4[i+3,3]))
@@ -473,9 +473,9 @@ while(i < nrow(likelihood4)){
 }
 
 #5 clusters
-everything5 <- totalFunction(firstdata,5,1)
+everything5 <- combineData(41.978611, -87.904724,"depart",1,5)
 j5 = 0
-likelihood5 = data.frame(everything5[4])
+likelihood5 = data.frame(everything5[2])
 i = 1
 while(i < nrow(likelihood5)){
   j5 = j5 + log(max(likelihood5[i,3],likelihood5[i+1,3],likelihood5[i+2,3],likelihood5[i+3,3],likelihood5[i+4,3]))
