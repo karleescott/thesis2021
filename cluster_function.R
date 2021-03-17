@@ -482,6 +482,23 @@ while(i < nrow(likelihood5)){
   i = i + 5
 }  
 
+#6 clusters
+data6 <- combineData(41.978611, -87.904724,"depart",1,6)
+# unzip the zipfile
+unzip(zipfile = "thesis2021/states_21basic.zip", 
+      exdir = 'states_21basic')
+
+# load the shapefile 
+map <- readOGR("states_21basic/states.shp")
+
+#crop the portion needed
+out <- crop(map, extent(-125, -65, 25, 50))
+
+conversion <- fortify(out)
+ggplot(data6, aes(lon, lat, color= factor(group))) +  
+  ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
 #https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/AIC
 AIC2 <- 2*j2-2*2
 BIC2 <- 2*j2-log(10531)*2
