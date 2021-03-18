@@ -85,7 +85,6 @@ plot3
 data <- read.csv("thesis2021/airport_data_karlee.csv")
 CHI_arrive_morning <- data %>%
   filter(time_of_day == 1, airport == "CHI", arrive_depart == "arrive")
-plot4 <- ggplot(MIA_arrive, aes(lon, lat, color= factor(group))) +  
+ggplot(MIA_arrive, aes(lon, lat, color= factor(group))) +  
   ggtitle("Cluster Routes Arriving at Chicago in the Morning") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path(show.legend = FALSE) +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
-plot4

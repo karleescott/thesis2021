@@ -495,10 +495,17 @@ map <- readOGR("states_21basic/states.shp")
 out <- crop(map, extent(-125, -65, 25, 50))
 
 conversion <- fortify(out)
-ggplot(data6, aes(lon, lat, color= factor(group))) +  
+ggplot(data.frame(data6[1]), aes(lon, lat, color= factor(group))) +  
   ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
+rand_data <- read.csv("thesis2021/airport_data_karlee.csv")
+CHI_depart_morning <- rand_data %>%
+  filter(time_of_day == 1, airport == "CHI", arrive_depart == "depart")
+plot4 <- ggplot(CHI_depart_morning, aes(lon, lat, color= factor(group))) +  
+  ggtitle("Cluster Routes Departing Chicago in the Morning") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path(show.legend = FALSE) +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+plot4
 #https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/AIC
 AIC2 <- 2*j2-2*2
 BIC2 <- 2*j2-log(10531)*2
