@@ -365,8 +365,11 @@ makeData2 <- function(lat,lon,startTime){
   data[,"lon"] <- as.numeric(as.character(data[,"lon"]))
   data[,"lat"] <- as.numeric(as.character(data[,"lat"]))
   
-  
-  #Must have at least 5 flight contributing to each point in mean function
+  return(data)
+}
+
+makeCluster <- function(data) {
+  #Must have at least 5 flight contributing to each point (tz) in mean function
   for(n in 1:numclusters){
     data1 <- data %>%
       filter(group == n)
@@ -378,15 +381,13 @@ makeData2 <- function(lat,lon,startTime){
     data <- data[!(data$group==n & data$tz>=cap),]
   }
   
-  return(data)
-}
-
-makeCluster <- function(data) {
+  #if a one cluster did not get assigned any flights, it renumbers the clusters so its 1,2,3 vs 1,2,4 for example
   numclusters <- as.numeric(length(unique(data$group)))
   groups <- sort(unique(data$group))
   for(r in 1:nrow(data)){
     data[r,"group"] <- match(data[r,"group"],groups)
   }
+  
   #create mean functions
   fun <- data.frame()
   data <- data %>%
@@ -477,7 +478,8 @@ makeCluster <- function(data) {
         filter(icao24 == res[i] & cluster == n)
       likelihoods[j,1] <- res[i]
       likelihoods[j,2] <- n
-      likelihoods[j,3] <- (1/(sqrt(2*pi*sd[n,2])))*exp((-1/(2*sd[n,2]^2))*(data1[1,3]^2))
+      ########################################################################################
+      likelihoods[j,3] <- (1/(sqrt(2*pi)*sd[n,2]))*exp((-1/(2*sd[n,2]^2))*(data1[1,"avdis"]^2))
       j <- j + 1
     }
   }
@@ -485,14 +487,16 @@ makeCluster <- function(data) {
   
   #select which function has highest likelihood for each path
   highli <-data.frame()
+  likelihoods <- likelihoods %>%
+    arrange(icao24,cluster)
   for(i in 1:length(res)){
     highli[i,1] <- res[i]
     data1 <- likelihoods %>%
       filter(icao24 == res[i])
-    HL <- max(data1[,3])
+    HL <- max(data1[,"likelihood"])
     for(n in 1:numclusters){
-      if(data1[n,3] == HL){
-        highli[i,2] <- n
+      if(data1[n,"likelihood"] == HL){
+        highli[i,"cluster"] <- n
       }
     }
   }
@@ -508,12 +512,12 @@ makeCluster <- function(data) {
   group <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(data[r,"icao24"] == highli[i,1]){
-      group[r] <- highli[i,2]
+    if(data[r,"icao24"] == highli[i,"icao24"]){
+      group[r] <- highli[i, "newgroup"]
     }
     else{
       i <- i + 1
-      group[r] <- highli[i,2]
+      group[r] <- highli[i, "newgroup"]
     }
   }
   data[,data_length] <- group
@@ -521,25 +525,23 @@ makeCluster <- function(data) {
   return(everything)
 }
 
-
-#####roadblock 4 clusters turned into 3 (no data was assigned to group 1), now theres no function to compare it to.
 compareMean <- function(fun1, fun2, threshold){
   numclusters = length(unique(fun2$group))
   #find squared distance between each time of the mean functions at every tz (functions are different lengths?)
   sqdist <- data.frame()
   for (r in 1:nrow(fun1)){
     for (n in 1:numclusters){
-      sqdist[r,1] <- fun1[r,1]
-      sqdist[r,2] <- fun1[r,2]
+      sqdist[r,1] <- fun1[r,"group"]
+      sqdist[r,2] <- fun1[r,"tz"]
       data1 <- fun2 %>%
         filter(group == n)
-      if(max(data1$tz) < fun1[r,2]){
+      if(max(data1$tz) < fun1[r,"tz"]){
         sqdist[r,2+n] <- "NA"
       }
       else{
         data2 <- data1 %>%
-          filter(tz == fun1[r,2])
-        sqdist[r,2+n] <- (as.numeric(as.character(fun1[r,3]))-as.numeric(as.character(data2[1,3])))^2 + (as.numeric(as.character(fun1[r,4]))-as.numeric(as.character(data2[1,4])))^2
+          filter(tz == fun1[r,"tz"])
+        sqdist[r,2+n] <- (as.numeric(as.character(fun1[r,"lon"]))-as.numeric(as.character(data2[1,"lon"])))^2 + (as.numeric(as.character(fun1[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
       }
     }  
   }
@@ -587,7 +589,6 @@ compareMean <- function(fun1, fun2, threshold){
   return("True")
 }
 
-#all specified airport data for 13 July. Must be filtered by hour to use. 
 combineData <- function(lat,lon,arrive_depart,threshold){
   if(arrive_depart == "depart"){
     data <- makeData(lat,lon,0)}
@@ -599,7 +600,7 @@ combineData <- function(lat,lon,arrive_depart,threshold){
   fun1 <- data.frame(everything[2])
   fun2 <- data.frame(everything1[2])
   j <- 0
-  while(compareMean(fun1,fun2,threshold) == "False"|| j == 10){
+  while(compareMean(fun1,fun2,threshold) == "False"|| j <= 10){
     fun1 <- fun2
     everything1 <- makeCluster(data.frame(everything1[1]))
     fun2 <- data.frame(everything1[2])
@@ -619,7 +620,7 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     fun1 <- data.frame(everything[2])
     fun2 <- data.frame(everything2[2])
     j = 0
-    while(compareMean(fun1,fun2,threshold) == "False" || j == 10){
+    while(compareMean(fun1,fun2,threshold) == "False" || j <= 10){
       fun1 <- fun2
       everything2 <- makeCluster(data.frame(everything2[1]))
       fun2 <- data.frame(everything2[2])
