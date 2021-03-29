@@ -179,18 +179,6 @@ makeData <- function(lat,lon,startTime){
   data[,"lon"] <- as.numeric(as.character(data[,"lon"]))
   data[,"lat"] <- as.numeric(as.character(data[,"lat"]))
   
-  #Must have at least 5 flight contributing to each point in mean function
-  for(n in 1:numclusters){
-    data1 <- data %>%
-      filter(group == n)
-    tz_count <- table(data1$tz)
-    tz_count <- as.data.frame(tz_count)
-    tz_count <- tz_count %>%
-      filter(Freq < 5)
-    cap <- as.numeric(as.character(tz_count[1,1]))
-    data <- data[!(data$group==n & data$tz>=cap),]
-  }
-  
   return(data)
 }
   
@@ -385,16 +373,16 @@ makeCluster <- function(data) {
     tz_count <- tz_count %>%
       filter(Freq < 5)
     cap <- as.numeric(as.character(tz_count[1,1]))
-    data <- data[!(data$group==n & data$tz>=cap),]
+    fun_data <- data[!(data$group==n & data$tz>=cap),]
   }
   
   #create mean functions
   fun <- data.frame()
-  data <- data %>%
+  fun_data <- fun_data %>%
     arrange(icao24, tz)
   j <- 0
   for(n in 1:numclusters){
-    data1 <- data %>%
+    data1 <- fun_data %>%
       filter(group == n)
     for(i in 1:max(data1$tz)){
       data2 <- data1 %>%
@@ -479,7 +467,7 @@ makeCluster <- function(data) {
       likelihoods[j,1] <- res[i]
       likelihoods[j,2] <- n
       ########################################################################################
-      likelihoods[j,3] <- (1/(sqrt(2*pi)*sd[n,2]))*exp((-1/(2*sd[n,2]^2))*(data1[1,"avdis"]^2))
+      likelihoods[j,3] <- (1/(sqrt(2*pi)*sd[n,"sd"]))*exp((-1/(2*sd[n,"sd"]^2))*(data1[1,"avdis"]^2))
       j <- j + 1
     }
   }
