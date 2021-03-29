@@ -369,6 +369,13 @@ makeData2 <- function(lat,lon,startTime){
 }
 
 makeCluster <- function(data) {
+  #if a one cluster did not get assigned any flights, it renumbers the clusters so its 1,2,3 vs 1,2,4 for example
+  numclusters <- as.numeric(length(unique(data$group)))
+  groups <- sort(unique(data$group))
+  for(r in 1:nrow(data)){
+    data[r,"group"] <- match(data[r,"group"],groups)
+  }
+  
   #Must have at least 5 flight contributing to each point (tz) in mean function
   for(n in 1:numclusters){
     data1 <- data %>%
@@ -379,13 +386,6 @@ makeCluster <- function(data) {
       filter(Freq < 5)
     cap <- as.numeric(as.character(tz_count[1,1]))
     data <- data[!(data$group==n & data$tz>=cap),]
-  }
-  
-  #if a one cluster did not get assigned any flights, it renumbers the clusters so its 1,2,3 vs 1,2,4 for example
-  numclusters <- as.numeric(length(unique(data$group)))
-  groups <- sort(unique(data$group))
-  for(r in 1:nrow(data)){
-    data[r,"group"] <- match(data[r,"group"],groups)
   }
   
   #create mean functions
@@ -753,15 +753,6 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
   return(finalAnswer)
 }
 
-airport_data[,"arrive_depart"] <- "depart"
-
-RDU <- read.csv("thesis2021//RDU.csv")
-write.csv(MIA,"thesis2021//MIA.csv")
-MIA <- combineData(25.7617,-80.1918,1)
-RDU <- cbind(RDU,airport = "RDU")
-RDU <- RDU[,-1]
-MIA <- cbind(MIA,airport = "MIA")
-airport_data <- rbind(RDU,MIA)
 write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
 
