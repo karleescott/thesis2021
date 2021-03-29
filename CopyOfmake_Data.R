@@ -357,14 +357,14 @@ makeData2 <- function(lat,lon,startTime){
 }
 
 makeCluster <- function(data) {
-  #if a one cluster did not get assigned any flights, it renumbers the clusters so its 1,2,3 vs 1,2,4 for example
+  #if one cluster did not get assigned any flights, this adjusts the clusters to 1,2,3 vs 1,2,4 for example
   numclusters <- as.numeric(length(unique(data$group)))
   groups <- sort(unique(data$group))
   for(r in 1:nrow(data)){
     data[r,"group"] <- match(data[r,"group"],groups)
   }
   
-  #Must have at least 5 flight contributing to each point (tz) in mean function
+  #Must have at least 5 flights contributing to each point (tz) in mean function
   for(n in 1:numclusters){
     data1 <- data %>%
       filter(group == n)
@@ -509,6 +509,7 @@ makeCluster <- function(data) {
     }
   }
   data[,data_length] <- group
+  data <- data[,1:data_length]
   everything <- list(data, fun, sd, likelihoods)
   return(everything)
 }
