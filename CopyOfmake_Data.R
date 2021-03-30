@@ -746,7 +746,7 @@ write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
 
 MIA_arrive <- combineData(25.7617,-80.1918,"arrive",1)
-MIA_arrive <- cbind(MIA_arrive,airport = "MIA",arrive_depart = "arrive")
+ MIA_arrive <- cbind(MIA_arrive,airport = "MIA",arrive_depart = "arrive")
 
 
 MIA_depart <- combineData(25.7617,-80.1918,"depart",1)
