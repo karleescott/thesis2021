@@ -591,12 +591,14 @@ combineData <- function(lat,lon,arrive_depart,threshold){
   j <- 0
   while(compareMean(fun1,fun2,threshold) == "False"|| j <= 10){
     fun1 <- fun2
+    flight_info1 <- everything1[1]
     everything1 <- makeCluster(data.frame(everything1[1]))
     fun2 <- data.frame(everything1[2])
     j <- j + 1
   }
   
   data <- cbind(as.data.frame(everything1[2]),time_of_day = 0)
+  flight_info <- cbind(flight_info1,time_of_day = 0)
   
   for (i in 1:3){
     if(arrive_depart == "depart"){
@@ -611,6 +613,7 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     j = 0
     while(compareMean(fun1,fun2,threshold) == "False" || j <= 10){
       fun1 <- fun2
+      flight_info1 <- everything2[1]
       everything2 <- makeCluster(data.frame(everything2[1]))
       fun2 <- data.frame(everything2[2])
       j <- j + 1
@@ -619,9 +622,14 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     data1 <- cbind(as.data.frame(everything2[2]),time_of_day = i)
     
     data <- rbind(data,data1)
+    
+    flight_info1 <- cbind(flight_info1,time_of_day = i)
+    
+    flight_info <- rbind(flight_info,flight_info1)
 
   }
-  return(data)
+  goods <- list(data,flight_info)
+  return(goods)
 }
 
 #Coersed NA on purpose, ignore errors. Takes about 5 minutes to run
@@ -754,44 +762,5 @@ write.csv(MIA_depart,"thesis2021//MIA_depart_karlee.csv")
 CHI_arrive <- combineData(41.978611, -87.904724,"arrive",1)
 write.csv(CHI_arrive,"thesis2021//CHI_arrive_karlee.csv")
 
-MIA_arrive <- cbind(MIA_arrive,airport = "MIA",arrive_depart = "arrive")
-
-
-MIA_depart <- combineData(25.7617,-80.1918,"depart",1)
-MIA_depart <- cbind(MIA_depart,airport = "MIA",arrive_depart = "depart")
-airport_data <- rbind(airport_data,MIA_depart)
-write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
-
-RDU_arrive <- combineData(35.8801,-78.7880,"arrive",1)
-RDU_arrive <- cbind(RDU_arrive,airport = "RDU",arrive_depart = "arrive")
-airport_data <- rbind(airport_data,RDU_arrive)
-write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
-airport_data <- airport_data[!(airport_data$airport=="RDU" & airport_data$arrive_depart=="arrive"),]
-
-RDU_depart <- combineData(35.8801,-78.7880,"depart",1)
-RDU_depart <- cbind(RDU_depart,airport = "RDU",arrive_depart = "depart")
-airport_data <- rbind(airport_data,RDU_depart)
-write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
-
-CHI_arrive <- combineData(41.978611, -87.904724,"arrive",1)
-CHI_arrive <- cbind(CHI_arrive,airport = "CHI",arrive_depart = "arrive")
-airport_data <- rbind(airport_data,CHI_arrive)
-write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
-
 CHI_depart <- combineData(41.978611, -87.904724,"depart",1)
-CHI_depart <- cbind(CHI_depart,airport = "CHI",arrive_depart = "depart")
-airport_data <- rbind(airport_data,CHI_depart)
-write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
-
-airport <- c("RDU","MIA","CHI")
-lat <- c(35.8801,25.7617)
-lon <- c(-78.7880,-80.1918)
-location <- as.data.frame(cbind(airport, lat, lon))
-location <- transform(location, airport = as.character(airport), lat = as.numeric(as.character(lat)), lon = as.numeric(as.character(lon)))
-write.csv(location,"thesis2021//location_data_karlee.csv")
-
-finalAnswer <- totalFunction("CHI","MIA",2,1)
-
-View(data.frame(finalAnswer[2]))
-finalAnswer[3]
-#hi
+write.csv(CHI_depart,"thesis2021//CHI_depart_karlee.csv")

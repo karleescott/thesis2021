@@ -214,3 +214,10 @@ totalFunction <- function(starting_airport,ending_airport,startingTime){
 
 plots <- totalFunction("CHI","MIA",2)
 plots[3]
+MIA_depart <- read.csv("thesis2021/MIA_depart_karlee.csv")
+MIA_depart <- MIA_depart[,-1]
+morning <- MIA_depart %>%
+  filter(time_of_day == 3)
+ggplot(morning, aes(lon, lat,color = factor(group))) +  
+  ggtitle("Morning Arrive CHI") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
