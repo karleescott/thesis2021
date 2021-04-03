@@ -6,6 +6,8 @@ library(ggplot2)
 library(foreach)
 library(doMC)
 
+registerDoMC(14)
+
 usdata <- read.csv("/lfs/karlee_combined_data.csv")
 
 #makes the data to be used in total Function. startTime is the hour of day (0-23)
@@ -403,20 +405,34 @@ makeCluster <- function(data) {
   
   #find squared distance between each point and the mean functions at every tz (functions are different lengths?)
   data_length <- ncol(data)
-  for (r in 1:nrow(data)){
+  # for (n in 1:numclusters){
+  cluster_cols <- foreach(n = 1:numclusters) %dopar% {
   ######################################################
-    for (n in 1:numclusters){
+    new_col <- c()
+    for (r in 1:nrow(data)){
       data1 <- fun %>%
         filter(group == n)
       if(max(data1$tz) < data[r,"tz"]){
-        data[r,data_length+n] <- "NA"
+        # data[r,data_length+n] <- "NA"
+        new_col <- c(new_col, "NA")
       }
       else{
         data2 <- data1 %>%
           filter(tz == data[r,"tz"])
-        data[r,data_length+n] <- (as.numeric(as.character(data[r,"lon"]))-as.numeric(as.character(data2[1,"lon"])))^2 + (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
+        # data[r,data_length+n] <- (as.numeric(as.character(data[r,"lon"])) - as.numeric(as.character(data2[1,"lon"])))^2 +
+        #   (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
+        new_entry <- (as.numeric(as.character(data[r,"lon"])) - as.numeric(as.character(data2[1,"lon"])))^2 +
+          (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
+        new_col <- c(new_col, new_entry)
       }
-    }  
+    }
+    new_col
+  }
+  
+  for (c in length(cluster_cols)) {
+    cbind(data, cluster_cols[[c]])
+    col_name <- paste0("V", c)
+    names(data)[length(names(data))] <- col_name
   }
     
   #re-define res
@@ -607,7 +623,7 @@ combineData <- function(lat,lon,arrive_depart,threshold){
   data <- cbind(as.data.frame(everything1[2]),time_of_day = 0)
   flight_info <- cbind(flight_info1,time_of_day = 0)
   
-  for (i in 1:3){
+  test_results <- foreach (i = 1:3) %dopar% {
   ############################################################
     if(arrive_depart == "depart"){
       data1 <- makeData(lat,lon,i)}
@@ -638,8 +654,19 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     list(data1, flight_info1)
 
   }
-  goods <- list(data,flight_info)
-  return(goods)
+  # goods <- list(data,flight_info)
+  # return(goods)
+  test_results
+  # we want list includes all data and all flight_info
+  # test_results = [[data1, flight_info1], ...]
+  data <- data.frame()
+  flight_info <- data.frame()
+  for (i in length(test_results)) {
+    iter_res <- test_results[[i]]
+    data <- rbind(data, iter_res[[1]])
+    flight_info <- rbind(flight_info, iter_res[[2]])
+  }
+  list(data, flight_info)
 }
 
 #Coersed NA on purpose, ignore errors. Takes about 5 minutes to run
