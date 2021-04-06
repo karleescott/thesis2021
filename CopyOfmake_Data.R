@@ -429,12 +429,10 @@ makeCluster <- function(data) {
     new_col
   }
   
-  for (c in length(cluster_cols)) {
-    cbind(data, cluster_cols[[c]])
-    col_name <- paste0("V", c)
-    names(data)[length(names(data))] <- col_name
+  for (c in length(cluster_cols)){
+    data <- cbind(data,c)
   }
-    
+      
   #re-define res
   list <- data[,"icao24"]
   res <- c()
@@ -602,28 +600,7 @@ compareMean <- function(fun1, fun2, threshold){
 }
 
 combineData <- function(lat,lon,arrive_depart,threshold){
-  if(arrive_depart == "depart"){
-    data <- makeData(lat,lon,0)}
-  else{
-    data <- makeData2(lat,lon,0)
-  }
-  everything <- makeCluster(data)
-  everything1 <- makeCluster(data.frame(everything[1]))
-  fun1 <- data.frame(everything[2])
-  fun2 <- data.frame(everything1[2])
-  j <- 0
-  while(compareMean(fun1,fun2,threshold) == "False"|| j <= 10){
-    fun1 <- fun2
-    flight_info1 <- everything1[1]
-    everything1 <- makeCluster(data.frame(everything1[1]))
-    fun2 <- data.frame(everything1[2])
-    j <- j + 1
-  }
-  
-  data <- cbind(as.data.frame(everything1[2]),time_of_day = 0)
-  flight_info <- cbind(flight_info1,time_of_day = 0)
-  
-  test_results <- foreach (i = 1:3) %dopar% {
+  test_results <- foreach (i = 0:3) %dopar% {
   ############################################################
     if(arrive_depart == "depart"){
       data1 <- makeData(lat,lon,i)}
@@ -643,11 +620,11 @@ combineData <- function(lat,lon,arrive_depart,threshold){
       j <- j + 1
     }
     
-    data1 <- cbind(as.data.frame(everything2[2]),time_of_day = i)
+    data <- cbind(as.data.frame(everything2[2]),time_of_day = i)
     
     # data <- rbind(data,data1)
     
-    flight_info1 <- cbind(flight_info1,time_of_day = i)
+    flight_info <- cbind(flight_info1,time_of_day = i)
     
     # flight_info <- rbind(flight_info,flight_info1)
     
