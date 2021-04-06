@@ -620,7 +620,7 @@ combineData <- function(lat,lon,arrive_depart,threshold){
       j <- j + 1
     }
     
-    data <- cbind(as.data.frame(everything2[2]),time_of_day = i)
+    fun_data <- cbind(as.data.frame(everything2[2]),time_of_day = i)
     
     # data <- rbind(data,data1)
     
@@ -628,7 +628,7 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     
     # flight_info <- rbind(flight_info,flight_info1)
     
-    list(data1, flight_info1)
+    list(fun_data, flight_info)
 
   }
   # goods <- list(data,flight_info)
@@ -636,14 +636,14 @@ combineData <- function(lat,lon,arrive_depart,threshold){
   test_results
   # we want list includes all data and all flight_info
   # test_results = [[data1, flight_info1], ...]
-  data <- data.frame()
+  fun_data <- data.frame()
   flight_info <- data.frame()
   for (i in length(test_results)) {
     iter_res <- test_results[[i]]
-    data <- rbind(data, iter_res[[1]])
+    fun_data <- rbind(data, iter_res[[1]])
     flight_info <- rbind(flight_info, iter_res[[2]])
   }
-  list(data, flight_info)
+  list(fun_data, flight_info)
 }
 
 #Coersed NA on purpose, ignore errors. Takes about 5 minutes to run
