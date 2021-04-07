@@ -4,6 +4,10 @@ library(rgdal)
 library(raster)
 library(rgeos)
 library(ggplot2)
+library(foreach)
+library(doMC)
+
+registerDoMC(14)
 
 
 usdata <- read.csv("/lfs/karlee_combined_data.csv")
