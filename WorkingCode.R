@@ -1,13 +1,8 @@
-
 library(tidyverse)
 library(rgdal)
 library(raster)
 library(rgeos)
 library(ggplot2)
-library(foreach)
-library(doMC)
-
-registerDoMC(14)
 
 
 usdata <- read.csv("/lfs/karlee_combined_data.csv")
@@ -405,28 +400,20 @@ makeCluster <- function(data) {
   
   #find squared distance between each point and the mean functions at every tz (functions are different lengths?)
   data_length <- ncol(data)
-  cluster_cols <- foreach(n = 1:numclusters) %dopar% {
-    data1 <- fun %>%
-      filter(group == n)
-    dis_col <- data.frame()
-    for (r in 1:nrow(data)){
+  for (r in 1:nrow(data)){
+    for (n in 1:numclusters){
+      data1 <- fun %>%
+        filter(group == n)
       if(max(data1$tz) < data[r,"tz"]){
-        dis_col[r,1] <- "NA"
+        data[r,data_length+n] <- "NA"
       }
       else{
         data2 <- data1 %>%
           filter(tz == data[r,"tz"])
-        dis_col[r,1] <- (as.numeric(as.character(data[r,"lon"]))-as.numeric(as.character(data2[1,"lon"])))^2 + (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
+        data[r,data_length+n] <- (as.numeric(as.character(data[r,"lon"]))-as.numeric(as.character(data2[1,"lon"])))^2 + (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
       }
-    }
-    dis_col
+    }  
   }
-  
-  for (c in length(cluster_cols)){
-    data <- cbind(data,c)
-  }
-  
-  head(data)
   
   #re-define res
   list <- data[,"icao24"]
@@ -479,6 +466,7 @@ makeCluster <- function(data) {
         filter(icao24 == res[i] & cluster == n)
       likelihoods[j,1] <- res[i]
       likelihoods[j,2] <- n
+      ########################################################################################
       likelihoods[j,3] <- (1/(sqrt(2*pi)*sd[n,"sd"]))*exp((-1/(2*sd[n,"sd"]^2))*(data1[1,"avdis"]^2))
       j <- j + 1
     }
@@ -591,7 +579,9 @@ compareMean <- function(fun1, fun2, threshold){
 }
 
 combineData <- function(lat,lon,arrive_depart,threshold){
-  test_results <- foreach (i = 0:3) %dopar% {
+  flight_info <- c()
+  data <- c()
+  for (i in 0:3){
     if(arrive_depart == "depart"){
       data1 <- makeData(lat,lon,i)}
     else{
@@ -612,18 +602,15 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     
     data1 <- cbind(as.data.frame(everything2[2]),time_of_day = i)
     
-    flight_info1 <- cbind(flight_info1,time_of_day = i)
+    data <- rbind(data,data1)
     
-    list(data1, flight_info1)
+    flight_info1 <- cbind(flight_info,time_of_day = i)
+    
+    flight_info <- rbind(flight_info,flight_info1)
+    
   }
-  fun_data <- data.frame()
-  flight_info <- data.frame()
-  for (i in length(test_results)) {
-    iter_res <- test_results[[i]]
-    fun_data <- rbind(fun_data, iter_res[[1]])
-    flight_info <- rbind(flight_info, iter_res[[2]])
-  }
-  list(fun_data, flight_info)
+  goods(flight_info, data)
+  return(goods)
 }
 
 #Coersed NA on purpose, ignore errors. Takes about 5 minutes to run
@@ -759,3 +746,44 @@ write.csv(CHI_arrive,"thesis2021//CHI_arrive_karlee.csv")
 CHI_depart <- combineData(41.978611, -87.904724,"depart",1)
 write.csv(CHI_depart,"thesis2021//CHI_depart_karlee.csv")
 
+MIA_arrive <- cbind(MIA_arrive,airport = "MIA",arrive_depart = "arrive")
+
+
+MIA_depart <- combineData(25.7617,-80.1918,"depart",1)
+MIA_depart <- cbind(MIA_depart,airport = "MIA",arrive_depart = "depart")
+airport_data <- rbind(airport_data,MIA_depart)
+write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
+
+RDU_arrive <- combineData(35.8801,-78.7880,"arrive",1)
+RDU_arrive <- cbind(RDU_arrive,airport = "RDU",arrive_depart = "arrive")
+airport_data <- rbind(airport_data,RDU_arrive)
+write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
+airport_data <- airport_data[!(airport_data$airport=="RDU" & airport_data$arrive_depart=="arrive"),]
+
+RDU_depart <- combineData(35.8801,-78.7880,"depart",1)
+RDU_depart <- cbind(RDU_depart,airport = "RDU",arrive_depart = "depart")
+airport_data <- rbind(airport_data,RDU_depart)
+write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
+
+CHI_arrive <- combineData(41.978611, -87.904724,"arrive",1)
+CHI_arrive <- cbind(CHI_arrive,airport = "CHI",arrive_depart = "arrive")
+airport_data <- rbind(airport_data,CHI_arrive)
+write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
+
+CHI_depart <- combineData(41.978611, -87.904724,"depart",1)
+CHI_depart <- cbind(CHI_depart,airport = "CHI",arrive_depart = "depart")
+airport_data <- rbind(airport_data,CHI_depart)
+write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
+
+airport <- c("RDU","MIA","CHI")
+lat <- c(35.8801,25.7617)
+lon <- c(-78.7880,-80.1918)
+location <- as.data.frame(cbind(airport, lat, lon))
+location <- transform(location, airport = as.character(airport), lat = as.numeric(as.character(lat)), lon = as.numeric(as.character(lon)))
+write.csv(location,"thesis2021//location_data_karlee.csv")
+
+finalAnswer <- totalFunction("CHI","MIA",2,1)
+
+View(data.frame(finalAnswer[2]))
+finalAnswer[3]
+#hi

@@ -1,3 +1,4 @@
+
 library(tidyverse)
 library(rgdal)
 library(raster)
@@ -7,6 +8,7 @@ library(foreach)
 library(doMC)
 
 registerDoMC(14)
+
 
 usdata <- read.csv("/lfs/karlee_combined_data.csv")
 
@@ -368,7 +370,6 @@ makeCluster <- function(data) {
   }
   
   #Must have at least 5 flights contributing to each point (tz) in mean function
-  #######################################################
   for(n in 1:numclusters){
     data1 <- data %>%
       filter(group == n)
@@ -385,7 +386,6 @@ makeCluster <- function(data) {
   fun_data <- fun_data %>%
     arrange(icao24, tz)
   j <- 0
-  ####################################################
   for(n in 1:numclusters){
     data1 <- fun_data %>%
       filter(group == n)
@@ -405,33 +405,28 @@ makeCluster <- function(data) {
   
   #find squared distance between each point and the mean functions at every tz (functions are different lengths?)
   data_length <- ncol(data)
-  # for (n in 1:numclusters){
   cluster_cols <- foreach(n = 1:numclusters) %dopar% {
-    ######################################################
-    new_col <- c()
+    data1 <- fun %>%
+      filter(group == n)
+    dis_col <- data.frame()
     for (r in 1:nrow(data)){
-      data1 <- fun %>%
-        filter(group == n)
       if(max(data1$tz) < data[r,"tz"]){
-        # data[r,data_length+n] <- "NA"
-        new_col <- c(new_col, "NA")
+        dis_col[r,1] <- "NA"
       }
       else{
         data2 <- data1 %>%
           filter(tz == data[r,"tz"])
-        # data[r,data_length+n] <- (as.numeric(as.character(data[r,"lon"])) - as.numeric(as.character(data2[1,"lon"])))^2 +
-        #   (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
-        new_entry <- (as.numeric(as.character(data[r,"lon"])) - as.numeric(as.character(data2[1,"lon"])))^2 +
-          (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
-        new_col <- c(new_col, new_entry)
+        dis_col[r,1] <- (as.numeric(as.character(data[r,"lon"]))-as.numeric(as.character(data2[1,"lon"])))^2 + (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
       }
     }
-    new_col
+    dis_col
   }
   
   for (c in length(cluster_cols)){
     data <- cbind(data,c)
   }
+  
+  head(data)
   
   #re-define res
   list <- data[,"icao24"]
@@ -455,7 +450,6 @@ makeCluster <- function(data) {
     data1 <- data %>%
       filter(icao24 == res[i])
     for(n in 1:numclusters){
-      #####################################################################  
       data2 <- as.numeric(as.character(data1[,data_length+n]))
       data2 <- na.omit(data2)
       avdis[j,1] <- res[i]
@@ -468,7 +462,6 @@ makeCluster <- function(data) {
   
   #find sd of each mean function
   sd <- data.frame()
-  ################################################################
   for(n in 1:numclusters){
     data1 <- avdis %>%
       filter(cluster == n)
@@ -481,7 +474,6 @@ makeCluster <- function(data) {
   likelihoods <- data.frame()
   j <- 1
   for (i in 1:length(res)){
-    ###############################################
     for (n in 1:numclusters){
       data1 <- avdis %>%
         filter(icao24 == res[i] & cluster == n)
@@ -502,7 +494,6 @@ makeCluster <- function(data) {
     data1 <- likelihoods %>%
       filter(icao24 == res[i])
     HL <- max(data1[,"likelihood"])
-    ###############################################################
     for(n in 1:numclusters){
       if(data1[n,"likelihood"] == HL){
         highli[i,"cluster"] <- n
@@ -601,7 +592,6 @@ compareMean <- function(fun1, fun2, threshold){
 
 combineData <- function(lat,lon,arrive_depart,threshold){
   test_results <- foreach (i = 0:3) %dopar% {
-    ############################################################
     if(arrive_depart == "depart"){
       data1 <- makeData(lat,lon,i)}
     else{
@@ -620,33 +610,23 @@ combineData <- function(lat,lon,arrive_depart,threshold){
       j <- j + 1
     }
     
-    fun_data <- cbind(as.data.frame(everything2[2]),time_of_day = i)
+    data1 <- cbind(as.data.frame(everything2[2]),time_of_day = i)
     
-    # data <- rbind(data,data1)
+    flight_info1 <- cbind(flight_info1,time_of_day = i)
     
-    flight_info <- cbind(flight_info1,time_of_day = i)
-    
-    # flight_info <- rbind(flight_info,flight_info1)
-    
-    list(fun_data, flight_info)
-    
+    list(data1, flight_info1)
   }
-  # goods <- list(data,flight_info)
-  # return(goods)
-  test_results
-  # we want list includes all data and all flight_info
-  # test_results = [[data1, flight_info1], ...]
   fun_data <- data.frame()
   flight_info <- data.frame()
   for (i in length(test_results)) {
     iter_res <- test_results[[i]]
-    fun_data <- rbind(data, iter_res[[1]])
+    fun_data <- rbind(fun_data, iter_res[[1]])
     flight_info <- rbind(flight_info, iter_res[[2]])
   }
   list(fun_data, flight_info)
 }
 
-#Coersed NA on purpose, ignore errors. Takes about 5 minutes to run
+#Coersed NA on purpose, ignore errors.
 
 closest_path <- function(fun,lat,lon){
   dis <- 10000
@@ -778,3 +758,4 @@ write.csv(CHI_arrive,"thesis2021//CHI_arrive_karlee.csv")
 
 CHI_depart <- combineData(41.978611, -87.904724,"depart",1)
 write.csv(CHI_depart,"thesis2021//CHI_depart_karlee.csv")
+
