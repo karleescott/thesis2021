@@ -401,20 +401,28 @@ makeCluster <- function(data) {
   
   #find squared distance between each point and the mean functions at every tz (functions are different lengths?)
   data_length <- ncol(data)
-  for (r in 1:nrow(data)){
-    for (n in 1:numclusters){
-      data1 <- fun %>%
-        filter(group == n)
+  cluster_cols <- foreach(n = 1:numclusters) %dopar% {
+    data1 <- fun %>%
+      filter(group == n)
+    dis_col <- data.frame()
+    for (r in 1:nrow(data)){
       if(max(data1$tz) < data[r,"tz"]){
-        data[r,data_length+n] <- "NA"
+        dis_col[r,1] <- "NA"
       }
       else{
         data2 <- data1 %>%
           filter(tz == data[r,"tz"])
-        data[r,data_length+n] <- (as.numeric(as.character(data[r,"lon"]))-as.numeric(as.character(data2[1,"lon"])))^2 + (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
+        dis_col[r,1] <- (as.numeric(as.character(data[r,"lon"]))-as.numeric(as.character(data2[1,"lon"])))^2 + (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
       }
-    }  
+    }
+    dis_col
   }
+  
+  for (c in length(cluster_cols)){
+    data <- cbind(data,c)
+  }
+  
+  head(data)
   
   #re-define res
   list <- data[,"icao24"]
@@ -467,7 +475,6 @@ makeCluster <- function(data) {
         filter(icao24 == res[i] & cluster == n)
       likelihoods[j,1] <- res[i]
       likelihoods[j,2] <- n
-      ########################################################################################
       likelihoods[j,3] <- (1/(sqrt(2*pi)*sd[n,"sd"]))*exp((-1/(2*sd[n,"sd"]^2))*(data1[1,"avdis"]^2))
       j <- j + 1
     }
@@ -580,9 +587,7 @@ compareMean <- function(fun1, fun2, threshold){
 }
 
 combineData <- function(lat,lon,arrive_depart,threshold){
-  data <- c()
-  flight_info <- c()
-  for (i in 0:3){
+  test_results <- foreach (i = 0:3) %dopar% {
     if(arrive_depart == "depart"){
       data1 <- makeData(lat,lon,i)}
     else{
@@ -603,15 +608,18 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     
     data1 <- cbind(as.data.frame(everything2[2]),time_of_day = i)
     
-    data <- rbind(data,data1)
-    
     flight_info1 <- cbind(flight_info1,time_of_day = i)
     
-    flight_info <- rbind(flight_info,flight_info1)
-    
+    list(data1, flight_info1)
   }
-  goods <- list(data,flight_info)
-  return(goods)
+  fun_data <- data.frame()
+  flight_info <- data.frame()
+  for (i in length(test_results)) {
+    iter_res <- test_results[[i]]
+    fun_data <- rbind(fun_data, iter_res[[1]])
+    flight_info <- rbind(flight_info, iter_res[[2]])
+  }
+  list(fun_data, flight_info)
 }
 
 #Coersed NA on purpose, ignore errors. Takes about 5 minutes to run
@@ -746,3 +754,4 @@ write.csv(CHI_arrive,"thesis2021//CHI_arrive_karlee.csv")
 
 CHI_depart <- combineData(41.978611, -87.904724,"depart",1)
 write.csv(CHI_depart,"thesis2021//CHI_depart_karlee.csv")
+
