@@ -405,28 +405,20 @@ makeCluster <- function(data) {
   
   #find squared distance between each point and the mean functions at every tz (functions are different lengths?)
   data_length <- ncol(data)
-  cluster_cols <- foreach(n = 1:numclusters) %dopar% {
     data1 <- fun %>%
       filter(group == n)
-    dis_col <- data.frame()
+  for(n in 1:numclusters){
     for (r in 1:nrow(data)){
       if(max(data1$tz) < data[r,"tz"]){
-        dis_col[r,1] <- "NA"
+        data[r,data_length+n] <- "NA"
       }
       else{
         data2 <- data1 %>%
           filter(tz == data[r,"tz"])
-        dis_col[r,1] <- (as.numeric(as.character(data[r,"lon"]))-as.numeric(as.character(data2[1,"lon"])))^2 + (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
+        data[r,data_length+n] <- (as.numeric(as.character(data[r,"lon"]))-as.numeric(as.character(data2[1,"lon"])))^2 + (as.numeric(as.character(data[r,"lat"]))-as.numeric(as.character(data2[1,"lat"])))^2
       }
     }
-    dis_col
   }
-  
-  for (c in length(cluster_cols)){
-    data <- cbind(data,cluster_cols[[c]])
-  }
-  
-  head(data)
   
   #re-define res
   list <- data[,"icao24"]
@@ -758,4 +750,3 @@ write.csv(CHI_arrive,"thesis2021//CHI_arrive_karlee.csv")
 
 CHI_depart <- combineData(41.978611, -87.904724,"depart",1)
 write.csv(CHI_depart,"thesis2021//CHI_depart_karlee.csv")
-
