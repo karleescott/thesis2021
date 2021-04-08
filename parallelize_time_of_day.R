@@ -610,7 +610,7 @@ combineData <- function(lat,lon,arrive_depart,threshold){
   }
   fun_data <- data.frame()
   flight_info <- data.frame()
-  for (i in length(test_results)) {
+  for (i in 1:length(test_results)) {
     iter_res <- test_results[[i]]
     fun_data <- rbind(fun_data, iter_res[[1]])
     flight_info <- rbind(flight_info, iter_res[[2]])

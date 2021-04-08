@@ -631,14 +631,9 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     list(fun_data, flight_info)
 
   }
-  # goods <- list(data,flight_info)
-  # return(goods)
-  test_results
-  # we want list includes all data and all flight_info
-  # test_results = [[data1, flight_info1], ...]
   fun_data <- data.frame()
   flight_info <- data.frame()
-  for (i in length(test_results)) {
+  for (i in 1:length(test_results)) {
     iter_res <- test_results[[i]]
     fun_data <- rbind(fun_data, iter_res[[1]])
     flight_info <- rbind(flight_info, iter_res[[2]])
@@ -766,7 +761,7 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
 
 write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
-
+View(CHI_depart[[1]])
 MIA_arrive <- combineData(25.7617,-80.1918,"arrive",1)
 write.csv(MIA_arrive,"thesis2021//MIA_arrive_karlee.csv")
 
