@@ -1,4 +1,3 @@
-
 library(tidyverse)
 library(rgdal)
 library(raster)
@@ -604,7 +603,7 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     
     data1 <- cbind(as.data.frame(everything2[2]),time_of_day = i)
     
-    flight_info1 <- cbind(flight_info1,time_of_day = i)
+    flight_info1 <- cbind(as.data.frame(flight_info1),time_of_day = i)
     
     list(data1, flight_info1)
   }
