@@ -404,9 +404,9 @@ makeCluster <- function(data) {
   
   #find squared distance between each point and the mean functions at every tz (functions are different lengths?)
   data_length <- ncol(data)
+  for(n in 1:numclusters){
     data1 <- fun %>%
       filter(group == n)
-  for(n in 1:numclusters){
     for (r in 1:nrow(data)){
       if(max(data1$tz) < data[r,"tz"]){
         data[r,data_length+n] <- "NA"
