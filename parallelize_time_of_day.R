@@ -749,3 +749,5 @@ write.csv(CHI_arrive,"thesis2021//CHI_arrive_karlee.csv")
 
 CHI_depart <- combineData(41.978611, -87.904724,"depart",1)
 write.csv(CHI_depart,"thesis2021//CHI_depart_karlee.csv")
+
+RDU_arrive <- combineData(35.8801,-78.7880,"arrive",1)
