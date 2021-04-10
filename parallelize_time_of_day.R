@@ -118,7 +118,7 @@ makeData <- function(lat,lon,startTime){
       filter(icao24 == res[i])
     j <- 1
     while(j <= nrow(data1)){
-      if(data1[j,"onground"] == "TRUE" & data1[j,"distance"] > 1){
+      if(data1[j,"onground"] == "TRUE" & data1[j,"tz"] > 5){
         last_time <- data1[j,"time"] 
         j <- nrow(data1) + 1
       } else{
@@ -126,7 +126,7 @@ makeData <- function(lat,lon,startTime){
         j <- j + 1
       }
     }
-    data <- data[!(data$icao24 == res[i] & data$time > last_time),]
+    data <- data[!(data$icao24 == res[i] & data$time >= last_time),]
   }
   
   #change times to start at 1
@@ -292,7 +292,7 @@ makeData2 <- function(lat,lon,startTime){
       filter(icao24 == res[i])
     j <- nrow(data1)
     while(j >= 1){
-      if(data1[j,"onground"] == "TRUE" & data1[j,6] > 1){
+      if(data1[j,"onground"] == "TRUE" & data1[j,"tz"] > 5){
         first_time <- data1[j,"time"] 
         j <- 0
       } else{
@@ -300,7 +300,7 @@ makeData2 <- function(lat,lon,startTime){
         j <- j - 1
       }
     }
-    data <- data[!(data$icao24 == res[i] & data$time < first_time),]
+    data <- data[!(data$icao24 == res[i] & data$time <= first_time),]
   }
   
   #change times to start at 1
@@ -754,6 +754,12 @@ write.csv(CHI_depart[[1]],"thesis2021//CHI_depart_karlee.csv")
 write.csv(CHI_depart[[2]],"thesis2021//CHI_depart_flights_karlee.csv")
 
 RDU_arrive <- combineData(35.8801,-78.7880,"arrive",1)
+View(RDU_arrive[[2]])
+
+write.csv(RDU_arrive[[1]],"thesis2021//RDU_arrive_karlee.csv")
+write.csv(RDU_arrive[[2]],"thesis2021//RDU_arrive_flights_karlee.csv")
+
+RDU_arrive2 <- combineData(35.8801,-78.7880,"arrive",1)
 View(RDU_arrive[[2]])
 
 write.csv(RDU_arrive[[1]],"thesis2021//RDU_arrive_karlee.csv")
