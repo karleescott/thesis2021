@@ -109,6 +109,25 @@ makeData <- function(lat,lon,startTime){
   data <- data %>%
     filter(time>=st)
   
+  #change times to start at 1
+  data <- data %>%
+    arrange(icao24, time)
+  
+  tz <- c(1)
+  i = 1
+  for(r in 2:nrow(data)){
+    if(as.character(data[r-1,"icao24"]) == as.character(data[r,"icao24"])){
+      i <- i + 1
+      tz[r] <- i
+    }
+    else{
+      i = 1
+      tz[r] <- i
+    }
+  }
+  data <- cbind(data, tz)
+  
+  
   #remove data that is a second flight from same icao24 (aka lands and then re take's off)
   data <- data %>%
     arrange(icao24, time)
@@ -128,25 +147,6 @@ makeData <- function(lat,lon,startTime){
     }
     data <- data[!(data$icao24 == res[i] & data$time >= last_time),]
   }
-  
-  #change times to start at 1
-  data <- data %>%
-    arrange(icao24, time)
-  
-  tz <- c(1)
-  i = 1
-  for(r in 2:nrow(data)){
-    if(as.character(data[r-1,"icao24"]) == as.character(data[r,"icao24"])){
-      i <- i + 1
-      tz[r] <- i
-    }
-    else{
-      i = 1
-      tz[r] <- i
-    }
-  }
-  data <- cbind(data, tz)
-  
   #assign initial random group/ cluster
   groups <- data.frame()
   l = 1
@@ -283,7 +283,25 @@ makeData2 <- function(lat,lon,startTime){
   data <- data %>%
     filter(time<=st)
   
-  #remove data that is a second flight form same icao24 (aka lands and then re take's off)
+  #change times to start at 1
+  data <- data %>%
+    arrange(icao24, desc(time))
+  
+  tz <- c(1)
+  i = 1
+  for(r in 2:nrow(data)){
+    if(as.character(data[r-1,"icao24"]) == as.character(data[r,"icao24"])){
+      i <- i + 1
+      tz[r] <- i
+    }
+    else{
+      i = 1
+      tz[r] <- i
+    }
+  }
+  data <- cbind(data, tz)
+  
+  #remove data that is a second flight from same icao24 (aka lands and then re take's off)
   data <- data %>%
     arrange(icao24, time)
   
@@ -302,24 +320,6 @@ makeData2 <- function(lat,lon,startTime){
     }
     data <- data[!(data$icao24 == res[i] & data$time <= first_time),]
   }
-  
-  #change times to start at 1
-  data <- data %>%
-    arrange(icao24, desc(time))
-  
-  tz <- c(1)
-  i = 1
-  for(r in 2:nrow(data)){
-    if(as.character(data[r-1,"icao24"]) == as.character(data[r,"icao24"])){
-      i <- i + 1
-      tz[r] <- i
-    }
-    else{
-      i = 1
-      tz[r] <- i
-    }
-  }
-  data <- cbind(data, tz)
   
   #assign initial random group
   groups <- data.frame()
