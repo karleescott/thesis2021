@@ -69,6 +69,30 @@ makeData <- function(lat,lon,startTime){
   data <- data %>%
     filter(icao24 %in% res)
   
+  #remove data that is a second flight from same icao24 (aka lands and then re take's off)
+  data <- data %>%
+    arrange(icao24, time)
+  
+  for(i in 1:length(res)){
+    data1 <- data %>%
+      filter(icao24 == res[i])
+    j <- 1
+    k <- 0
+    while(j <= nrow(data1)){
+      if(data1[j,"onground"] == "TRUE" & data1[j,"distance"] > 1){
+        last_time <- data1[j,"time"] 
+        j <- nrow(data1) + 1
+        k <- 1
+      } else{
+        j <- j + 1
+      }
+    }
+    if(k == 0){
+      last_time <- data1[nrow(data1),"time"]
+    }
+    data <- data[!(data$icao24 == res[i] & data$time >= last_time),]
+  }
+  
   #find start time based on smallest distance from RDU
   start <- data.frame()
   i = 1
@@ -127,26 +151,6 @@ makeData <- function(lat,lon,startTime){
   }
   data <- cbind(data, tz)
   
-  
-  #remove data that is a second flight from same icao24 (aka lands and then re take's off)
-  data <- data %>%
-    arrange(icao24, time)
-  
-  for(i in 1:length(res)){
-    data1 <- data %>%
-      filter(icao24 == res[i])
-    j <- 1
-    while(j <= nrow(data1)){
-      if(data1[j,"onground"] == "TRUE" & data1[j,"tz"] > 5){
-        last_time <- data1[j,"time"] 
-        j <- nrow(data1) + 1
-      } else{
-        last_time <- data1[j,"time"] 
-        j <- j + 1
-      }
-    }
-    data <- data[!(data$icao24 == res[i] & data$time >= last_time),]
-  }
   #assign initial random group/ cluster
   groups <- data.frame()
   l = 1
@@ -242,6 +246,30 @@ makeData2 <- function(lat,lon,startTime){
   data <- data %>%
     filter(icao24 %in% res)
   
+  #remove data that is a second flight from same icao24 (aka lands and then re take's off)
+  data <- data %>%
+    arrange(icao24, time)
+  
+  for(i in 1:length(res)){
+    data1 <- data %>%
+      filter(icao24 == res[i])
+    j <- nrow(data1)
+    k <- 0
+    while(j >= 1){
+      if(data1[j,"onground"] == "TRUE" & data1[j,"distance"] > 1){
+        first_time <- data1[j,"time"] 
+        j <- 0
+        k <- 1
+      } else{
+        j <- j - 1
+      }
+    }
+    if(k == 0){
+      first_time <- data1[1,"time"]
+    }
+    data <- data[!(data$icao24 == res[i] & data$time <= first_time),]
+  }
+  
   #find start time based on smallest distance from RDU
   start <- data.frame()
   i = 1
@@ -300,26 +328,6 @@ makeData2 <- function(lat,lon,startTime){
     }
   }
   data <- cbind(data, tz)
-  
-  #remove data that is a second flight from same icao24 (aka lands and then re take's off)
-  data <- data %>%
-    arrange(icao24, time)
-  
-  for(i in 1:length(res)){
-    data1 <- data %>%
-      filter(icao24 == res[i])
-    j <- nrow(data1)
-    while(j >= 1){
-      if(data1[j,"onground"] == "TRUE" & data1[j,"tz"] > 5){
-        first_time <- data1[j,"time"] 
-        j <- 0
-      } else{
-        first_time <- data1[j,"time"] 
-        j <- j - 1
-      }
-    }
-    data <- data[!(data$icao24 == res[i] & data$time <= first_time),]
-  }
   
   #assign initial random group
   groups <- data.frame()
