@@ -29,7 +29,7 @@ makeData <- function(lat,lon,startTime){
   #filter data by continental US, select needed columns, remove rows with NA
   data <- data %>%
     filter(lon >= -125 & lon <= -65 & lat >= 25 & lat <= 50)
-  data <- cbind(as.numeric(as.character(data$time)),as.character(data$icao24),as.numeric(as.character(data$lon)),as.numeric(as.character(data$lat)),as.character(data$onground))
+  data <- cbind(data$time,as.character(data$icao24),data$lon,data$lat,as.character(data$onground))
   data <- na.omit(data)
   data <- data.frame(data)
   colnames(data) <- c("time", "icao24", "lon", "lat","onground")
@@ -37,17 +37,17 @@ makeData <- function(lat,lon,startTime){
   #create column that determines distance from airport of interest
   distance <- c()
   for(row in 1:nrow(data)){
-    distance[row] <- sqrt((data[row,"lon"]-lon)^2 + (data[row,"lat"]-lat)^2)
+    distance[row] <- sqrt((as.numeric(as.character(data[row,"lon"]))-(lon))^2 + (as.numeric(as.character(data[row,"lat"]))-(lat))^2)
   }
   
-  data <- cbind(data, as.numeric(as.character(distance)))
+  data <- cbind(data, distance)
   
   #make list of ids that pass through airport of interest (1 degree buffer)
   list = c()
   i = 1
   for (row in 1:nrow(data)){
     if(data[row,"distance"] <= 1) {
-      list[i] <- data[row,"icao24"]
+      list[i] <- as.character(data[row,"icao24"])
       i <- i + 1
     }
   }
@@ -79,14 +79,14 @@ makeData <- function(lat,lon,startTime){
     j <- 1
     while(j <= nrow(data1)){
       if(data1[j,"onground"] == "True" & data1[j,"distance"] > 1){
-        last_time <- data1[j,"time"]
+        last_time <- as.numeric(as.character(data1[j,"time"])) 
         j <- nrow(data1) + 1
       } else{
-        last_time <- data1[j,"time"]
+        last_time <- as.numeric(as.character(data1[j,"time"])) 
         j <- j + 1
       }
     }
-    data <- data[!(data$icao24 == res[i] & data$time >= last_time),]
+    data <- data[!(as.character(data$icao24) == res[i] & as.numeric(as.character(data$time)) >= last_time),]
   }
   
   #find start time based on smallest distance from RDU
@@ -104,31 +104,29 @@ makeData <- function(lat,lon,startTime){
     i <- i + 1
   }
   colnames(start) <- c("icao24","starttime")
-  start[,"icao24"] <- as.character(start[,"icao24"])
-  start[,"starttime"] <- as.numeric(as.character(start[,"starttime"]))
   
   #add start time to data
   data <- data %>%
     arrange(icao24)
   start <- start %>%
-    arrange(starttime)
+    arrange(icao24)
   
   st <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(data[r,"icao24"] == start[i,"icao24"]){
-      st[r] <- start[i,"starttime"]
+    if(as.character(data[r,"icao24"]) == as.character(start[i,"icao24"])){
+      st[r] <- as.numeric(as.character(start[i,"starttime"]))
     }
     else{
       i <- i + 1
-      st[r] <- start[i,"starttime"]
+      st[r] <- as.numeric(as.character(start[i,"starttime"]))
     }
   }
   
   data <- cbind(data, st)
-  data[,"st"] <- as.numeric(as.character(data[,"st"]))
   
   #remove all times prior to start time
+  data[,"time"] <- as.numeric(as.character(data[,"time"]))
   data <- data %>%
     filter(time>=st)
   
@@ -139,7 +137,7 @@ makeData <- function(lat,lon,startTime){
   tz <- c(1)
   i = 1
   for(r in 2:nrow(data)){
-    if(data[r-1,"icao24"] == data[r,"icao24"]){
+    if(as.character(data[r-1,"icao24"]) == as.character(data[r,"icao24"])){
       i <- i + 1
       tz[r] <- i
     }
@@ -149,7 +147,6 @@ makeData <- function(lat,lon,startTime){
     }
   }
   data <- cbind(data, tz)
-  data[,"tz"] <- as.numeric(as.character(data[,"tz"]))
   
   #assign initial random group/ cluster
   groups <- data.frame()
@@ -165,9 +162,6 @@ makeData <- function(lat,lon,startTime){
     }
   }
   colnames(groups) = c("icao24", "group")
-  groups[,"icao24"] <- as.character(groups[,"icao24"])
-  groups[,"group"] <- as.numeric(as.character(groups[,"group"]))
-  
   data <- data %>%
     arrange(icao24)
   fundata <- groups %>%
@@ -176,7 +170,7 @@ makeData <- function(lat,lon,startTime){
   group <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(data[r,"icao24"] == fundata[i,"icao24"]){
+    if(as.character(data[r,"icao24"]) == as.character(fundata[i,"icao24"])){
       group[r] <- fundata[i,"group"]
     }
     else{
@@ -186,7 +180,9 @@ makeData <- function(lat,lon,startTime){
   }
   
   data <- cbind(data, group)
-  data[,"group"] <- as.numeric(as.character(data[,"group"]))
+  data[,"icao24"] <- as.character(data[,"icao24"])
+  data[,"lon"] <- as.numeric(as.character(data[,"lon"]))
+  data[,"lat"] <- as.numeric(as.character(data[,"lat"]))
   
   return(data)
 }
@@ -209,7 +205,7 @@ makeData2 <- function(lat,lon,startTime){
   #filter data by continental US, select needed columns, remove rows with NA
   data <- data %>%
     filter(lon >= -125 & lon <= -65 & lat >= 25 & lat <= 50)
-  data <- cbind(as.numeric(as.character(data$time)),as.character(data$icao24),as.numeric(as.character(data$lon)),as.numeric(as.character(data$lat)),as.character(data$onground))
+  data <- cbind(data$time,as.character(data$icao24),data$lon,data$lat,as.character(data$onground))
   data <- na.omit(data)
   data <- data.frame(data)
   colnames(data) <- c("time", "icao24", "lon", "lat","onground")
@@ -217,18 +213,17 @@ makeData2 <- function(lat,lon,startTime){
   #create column that determines distance from airport of interest
   distance <- c()
   for(row in 1:nrow(data)){
-    distance[row] <- sqrt((data[row,"lon"]-lon)^2 + (data[row,"lat"]-lat)^2)
+    distance[row] <- sqrt((as.numeric(as.character(data[row,"lon"]))-(lon))^2 + (as.numeric(as.character(data[row,"lat"]))-(lat))^2)
   }
   
   data <- cbind(data, distance)
-  data[,"distance"] <- as.numeric(as.character(data[,"distance"]))
   
   #make list of ids that pass through airport of interest (1 degree buffer)
   list = c()
   i = 1
   for (row in 1:nrow(data)){
     if(data[row,"distance"] <= 1) {
-      list[i] <- data[row,"icao24"]
+      list[i] <- as.character(data[row,"icao24"])
       i <- i + 1
     }
   }
@@ -260,14 +255,14 @@ makeData2 <- function(lat,lon,startTime){
     j <- nrow(data1)
     while(j >= 1){
       if(data1[j,"onground"] == "True" & data1[j,"distance"] > 1){
-        first_time <- data1[j,"time"]
+        first_time <- as.numeric(as.character(data[j,"time"]))
         j <- 0
       } else{
-        first_time <- data1[j,"time"] 
+        first_time <- as.numeric(as.character(data1[j,"time"])) 
         j <- j - 1
       }
     }
-    data <- data[!(data$icao24 == res[i] & data$time <= first_time),]
+    data <- data[!(as.character(data$icao24) == res[i] & as.numeric(as.character(data$time)) <= first_time),]
   }
   
   #find start time based on smallest distance from RDU
@@ -285,8 +280,6 @@ makeData2 <- function(lat,lon,startTime){
     i <- i + 1
   }
   colnames(start) <- c("icao24","starttime")
-  start[,"icao24"] <- as.character(start[,"icao24"])
-  start[,"starttime"] <- as.numeric(as.character(start[,"starttime"]))
   
   #add start time to data
   data <- data %>%
@@ -297,20 +290,20 @@ makeData2 <- function(lat,lon,startTime){
   st <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(data[r,"icao24"] == start[i,"icao24"]){
-      st[r] <- start[i,"starttime"]
+    if(as.character(data[r,"icao24"]) == as.character(start[i,"icao24"])){
+      st[r] <- as.numeric(as.character(start[i,"starttime"]))
     }
     else{
       i <- i + 1
-      st[r] <- start[i,"starttime"]
+      st[r] <- as.numeric(as.character(start[i,"starttime"]))
     }
   }
   
   data <- cbind(data, st)
-  data[,"st"] <- as.numeric(as.character(data[,"st"]))
   
   #remove all times after start time
   #if the plane takes more than one route through the area, this approach might delete previous routes
+  data[,"time"] <- as.numeric(as.character(data[,"time"]))
   data <- data %>%
     filter(time<=st)
   
@@ -321,7 +314,7 @@ makeData2 <- function(lat,lon,startTime){
   tz <- c(1)
   i = 1
   for(r in 2:nrow(data)){
-    if(data[r-1,"icao24"] == data[r,"icao24"]){
+    if(as.character(data[r-1,"icao24"]) == as.character(data[r,"icao24"])){
       i <- i + 1
       tz[r] <- i
     }
@@ -331,7 +324,6 @@ makeData2 <- function(lat,lon,startTime){
     }
   }
   data <- cbind(data, tz)
-  data[,"tz"] <- as.numeric(as.character(data[,"tz"]))
   
   #assign initial random group
   groups <- data.frame()
@@ -347,9 +339,6 @@ makeData2 <- function(lat,lon,startTime){
     }
   }
   colnames(groups) = c("icao24", "group")
-  groups[,"icao24"] <- as.character(groups[,"icao24"])
-  groups[,"group"] <- as.numeric(as.character(groups[,"group"]))
-  
   data <- data %>%
     arrange(icao24)
   fundata <- groups %>%
@@ -358,7 +347,7 @@ makeData2 <- function(lat,lon,startTime){
   group <- c()
   i = 1
   for(r in 1:nrow(data)){
-    if(data[r,"icao24"] == fundata[i,"icao24"]){
+    if(as.character(data[r,"icao24"]) == as.character(fundata[i,"icao24"])){
       group[r] <- fundata[i,"group"]
     }
     else{
@@ -368,7 +357,9 @@ makeData2 <- function(lat,lon,startTime){
   }
   
   data <- cbind(data, group)
-  data[,"group"] <- as.numeric(as.character(data[,"group"]))
+  data[,"icao24"] <- as.character(data[,"icao24"])
+  data[,"lon"] <- as.numeric(as.character(data[,"lon"]))
+  data[,"lat"] <- as.numeric(as.character(data[,"lat"]))
   
   return(data)
 }
@@ -386,7 +377,7 @@ makeCluster <- function(data) {
     data1 <- data %>%
       filter(group == n)
     tz_count <- table(data1$tz)
-    tz_count <- as.data.frame(tz_count)
+    tz_count <- data.frame(tz_count)
     tz_count <- tz_count %>%
       filter(Freq < 5)
     cap <- as.numeric(as.character(tz_count[1,1]))
