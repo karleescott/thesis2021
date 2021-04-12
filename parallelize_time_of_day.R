@@ -255,7 +255,7 @@ makeData2 <- function(lat,lon,startTime){
     j <- nrow(data1)
     while(j >= 1){
       if(data1[j,"onground"] == "True" & data1[j,"distance"] > 1){
-        first_time <- as.numeric(as.character(data[j,"time"]))
+        first_time <- as.numeric(as.character(data1[j,"time"]))
         j <- 0
       } else{
         first_time <- as.numeric(as.character(data1[j,"time"])) 
