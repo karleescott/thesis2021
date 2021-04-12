@@ -13,11 +13,6 @@ usdata <- read.csv("/lfs/karlee_combined_data.csv")
 
 #makes the data to be used in total Function. startTime is the hour of day (0-23)
 makeData <- function(lat,lon,startTime){ 
-  lat <- 35.8801
-  lon <- -78.7880
-  #lat <- 35.8801
-  #lon <- -78.7880
-  startTime <- 2
   print(startTime)
   
   #filters the data's time to startTime provided by the user: 0(night) = 0000-0600, 1(morning) = 0600-1200, 2(afternoon) = 1200-1800, 3(evening) = 1800-0000
@@ -740,7 +735,8 @@ write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
 
 MIA_arrive <- combineData(25.7617,-80.1918,"arrive",1)
-write.csv(MIA_arrive,"thesis2021//MIA_arrive_karlee.csv")
+write.csv(MIA_arrive[[1]],"thesis2021//MIA_arrive_karlee.csv")
+write.csv(MIA_arrive[[2]],"thesis2021//MIA_arrive_flights_karlee.csv")
 
 MIA_depart <- combineData(25.7617,-80.1918,"depart",1)
 write.csv(MIA_depart,"thesis2021//MIA_depart_karlee.csv")
@@ -810,10 +806,3 @@ RDU_arrive_afternoon_clusters <- ggplot(afternoon_fun, aes(lon, lat,color = fact
   ggtitle("Flights Arriving into RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 RDU_arrive_afternoon_clusters
-
-test <- data %>%
-  filter(icao24 == "0d07f0" & tz <=9)
-
-ggplot(test, aes(lon, lat)) +  
-  ggtitle("Flights Arriving into RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
