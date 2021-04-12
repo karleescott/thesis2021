@@ -13,9 +13,11 @@ usdata <- read.csv("/lfs/karlee_combined_data.csv")
 
 #makes the data to be used in total Function. startTime is the hour of day (0-23)
 makeData <- function(lat,lon,startTime){ 
+  lat <- 35.8801
+  lon <- -78.7880
   #lat <- 35.8801
   #lon <- -78.7880
-  #startTime <- 0
+  startTime <- 2
   print(startTime)
   
   #filters the data's time to startTime provided by the user: 0(night) = 0000-0600, 1(morning) = 0600-1200, 2(afternoon) = 1200-1800, 3(evening) = 1800-0000
@@ -46,7 +48,7 @@ makeData <- function(lat,lon,startTime){
   list = c()
   i = 1
   for (row in 1:nrow(data)){
-    if(data[row,"distance"] <= 1) {
+    if(data[row,"distance"] <= .25) {
       list[i] <- as.character(data[row,"icao24"])
       i <- i + 1
     }
@@ -78,7 +80,7 @@ makeData <- function(lat,lon,startTime){
       filter(icao24 == res[i])
     j <- 1
     while(j <= nrow(data1)){
-      if(data1[j,"onground"] == "True" & data1[j,"distance"] > 1){
+      if(data1[j,"onground"] == "True" & data1[j,"distance"] > .25){
         last_time <- as.numeric(as.character(data1[j,"time"])) 
         j <- nrow(data1) + 1
       } else{
@@ -188,11 +190,6 @@ makeData <- function(lat,lon,startTime){
 }
 
 makeData2 <- function(lat,lon,startTime){ 
-  lat <- 35.8801
-  lon <- -78.7880
-  #lat <- 35.8801
-  #lon <- -78.7880
-  startTime <- 2
   print(startTime)
   #filters the data's time to startTime provided by the user: 0(night) = 0000-0600, 1(morning) = 0600-1200, 2(afternoon) = 1200-1800, 3(evening) = 1800-0000
   data <- usdata
@@ -222,7 +219,7 @@ makeData2 <- function(lat,lon,startTime){
   list = c()
   i = 1
   for (row in 1:nrow(data)){
-    if(data[row,"distance"] <= 1) {
+    if(data[row,"distance"] <= .25) {
       list[i] <- as.character(data[row,"icao24"])
       i <- i + 1
     }
@@ -254,7 +251,7 @@ makeData2 <- function(lat,lon,startTime){
       filter(icao24 == res[i])
     j <- nrow(data1)
     while(j >= 1){
-      if(data1[j,"onground"] == "True" & data1[j,"distance"] > 1){
+      if(data1[j,"onground"] == "True" & data1[j,"distance"] > .25){
         first_time <- as.numeric(as.character(data1[j,"time"]))
         j <- 0
       } else{
@@ -813,3 +810,10 @@ RDU_arrive_afternoon_clusters <- ggplot(afternoon_fun, aes(lon, lat,color = fact
   ggtitle("Flights Arriving into RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 RDU_arrive_afternoon_clusters
+
+test <- data %>%
+  filter(icao24 == "0d07f0" & tz <=9)
+
+ggplot(test, aes(lon, lat)) +  
+  ggtitle("Flights Arriving into RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
