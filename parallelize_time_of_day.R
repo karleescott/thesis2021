@@ -79,10 +79,10 @@ makeData <- function(lat,lon,startTime){
     j <- 1
     while(j <= nrow(data1)){
       if(data1[j,"onground"] == "True" & data1[j,"distance"] > 1){
-        last_time <- data1[j,"time"] 
+        last_time <- as.numeric(as.character(data1[j,"time"])) 
         j <- nrow(data1) + 1
       } else{
-        last_time <- data1[j,"time"] 
+        last_time <- as.numeric(as.character(data1[j,"time"])) 
         j <- j + 1
       }
     }
@@ -187,9 +187,11 @@ makeData <- function(lat,lon,startTime){
 }
 
 makeData2 <- function(lat,lon,startTime){ 
+  lat <- 35.8801
+  lon <- -78.7880
   #lat <- 35.8801
   #lon <- -78.7880
-  #startTime <- 0
+  startTime <- 2
   print(startTime)
   #filters the data's time to startTime provided by the user: 0(night) = 0000-0600, 1(morning) = 0600-1200, 2(afternoon) = 1200-1800, 3(evening) = 1800-0000
   data <- usdata
@@ -252,10 +254,10 @@ makeData2 <- function(lat,lon,startTime){
     j <- nrow(data1)
     while(j >= 1){
       if(data1[j,"onground"] == "True" & data1[j,"distance"] > 1){
-        first_time <- data1[j,"time"] 
+        first_time <- as.numeric(as.character(data[j,"time"]))
         j <- 0
       } else{
-        first_time <- data1[j,"time"] 
+        first_time <- as.numeric(as.character(data1[j,"time"])) 
         j <- j - 1
       }
     }
