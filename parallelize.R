@@ -245,7 +245,7 @@ makeData2 <- function(lat,lon,startTime){
   data <- data %>%
     arrange(icao24)
   start <- start %>%
-    arrange(V1)
+    arrange(icao24)
   
   st <- c()
   i = 1
@@ -577,7 +577,7 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     fun1 <- data.frame(everything[2])
     fun2 <- data.frame(everything2[2])
     j = 0
-    while(compareMean(fun1,fun2,threshold) == "False" || j <= 10){
+    while(compareMean(fun1,fun2,threshold) == "False" && j <= 5){
       fun1 <- fun2
       flight_info1 <- everything2[1]
       everything2 <- makeCluster(data.frame(everything2[1]))
