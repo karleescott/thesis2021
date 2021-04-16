@@ -65,7 +65,7 @@ makeData <- function(lat,lon,startTime){
       filter(icao24 == res[i])
     j <- 1
     while(j <= nrow(data1)){
-      if(data1[j,"onground"] == "True" && data1[j,"distance"] > .25){
+      if(as.character(data1[j,"onground"]) == "True" && data1[j,"distance"] > .25){
         last_time <- as.numeric(as.character(data1[j,"time"])) 
         j <- nrow(data1) + 1
       } else{
@@ -73,7 +73,7 @@ makeData <- function(lat,lon,startTime){
         j <- j + 1
       }
     }
-    data <- data[!(as.character(data$icao24) == res[i] & as.numeric(as.character(data$time)) >= last_time),]
+    data <- data[!(as.character(data$icao24) == res[i] & as.numeric(as.character(data$time)) > last_time),]
   }
   
   #find start time based on smallest distance from RDU
@@ -228,7 +228,7 @@ makeData2 <- function(lat,lon,startTime){
       filter(icao24 == i)
     j <- nrow(data1)
     while(j >= 1){
-      if(data1[j,"onground"] == "True" && data1[j,"distance"] > .25){
+      if(as.character(data1[j,"onground"]) == "True" && data1[j,"distance"] > .25){
         first_time <- as.numeric(as.character(data1[j,"time"]))
         j <- 0
       } else{
@@ -694,7 +694,7 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
     ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
     geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
   
-  finalAnswer <- list(CF, totalData[,1:4], plot1, plot2)
+  finalAnswer <- list(CF, totalData[,c("group","tz","lat","lon")], plot1, plot2)
   
   return(finalAnswer)
 }

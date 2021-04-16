@@ -110,7 +110,7 @@ makeData <- function(lat,lon,startTime){
       filter(icao24 == i)
     j <- 1
     while(j <= nrow(data1)){
-      if(data1[j,"onground"] == "True" && data1[j,"distance"] > .25){
+      if(as.character(data1[j,"onground"]) == "True" && data1[j,"distance"] > .25){
         last_time <- data1[j,"time"] 
         j <- nrow(data1) + 1
       } else{
@@ -276,7 +276,7 @@ makeData2 <- function(lat,lon,startTime){
       filter(icao24 == i)
     j <- nrow(data1)
     while(j >= 1){
-      if(data1[j,"onground"] == "True" && data1[j,"distance"] > .25){
+      if(as.character(data1[j,"onground"]) == "True" && data1[j,"distance"] > .25){
         first_time <- data1[j,"time"] 
         j <- 0
       } else{
@@ -570,6 +570,9 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     if(arrive_depart == "depart"){
       data1 <- makeData(lat,lon,i)}
     else{
+      lat <- 25.7617
+      lon <- -80.1918
+      i <- 1
       data1 <- makeData2(lat,lon,i)
     }
     everything <- makeCluster(data1)
