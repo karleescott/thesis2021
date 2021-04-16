@@ -36,7 +36,6 @@ makeData <- function(lat,lon,startTime){
   for(row in 1:nrow(data)){
     distance[row] <- sqrt((as.numeric(as.character(data[row,"lon"]))-(lon))^2 + (as.numeric(as.character(data[row,"lat"]))-(lat))^2)
   }
-  
   data <- cbind(data, distance)
   
   #make list of ids that pass through airport of interest (.25 degree buffer)
@@ -50,16 +49,7 @@ makeData <- function(lat,lon,startTime){
   }
   
   #remove repeat ids
-  res <- c()
-  i = 1
-  for (j in list){ 
-    if (j %in% res){ 
-    }
-    else{
-      res[i] <- j
-      i <- i + 1
-    }
-  }
+  res <- unique(list)
   
   #only select the airplanes/ids that pass through airport of interest
   res <- sort(res)
@@ -75,7 +65,7 @@ makeData <- function(lat,lon,startTime){
       filter(icao24 == res[i])
     j <- 1
     while(j <= nrow(data1)){
-      if(data1[j,"onground"] == "True" & data1[j,"distance"] > .25){
+      if(data1[j,"onground"] == "True" && data1[j,"distance"] > .25){
         last_time <- as.numeric(as.character(data1[j,"time"])) 
         j <- nrow(data1) + 1
       } else{
@@ -209,44 +199,36 @@ makeData2 <- function(lat,lon,startTime){
   }
   
   data <- cbind(data, distance)
+  View(data)
   
   #make list of ids that pass through airport of interest (1 degree buffer)
   list = c()
   i = 1
-  for (row in 1:nrow(data)){
-    if(data[row,"distance"] <= .25) {
-      list[i] <- as.character(data[row,"icao24"])
+  for (r in 1:nrow(data)){
+    if(data[r,"distance"] <= .25) {
+      list[i] <- as.character(data[r,"icao24"])
       i <- i + 1
     }
   }
-  
+
   #remove repeat ids
-  res <- c()
-  i = 1
-  for (j in list){ 
-    if (j %in% res){ 
-    }
-    else{
-      res[i] <- j
-      i <- i + 1
-    }
-  }
+  res <- unique(list)
   
   #only select the airplanes/ids that pass through airport of interest
   res <- sort(res)
   data <- data %>%
     filter(icao24 %in% res)
-  
+
   #remove data that is a second flight from same icao24 (aka lands and then re take's off)
   data <- data %>%
     arrange(icao24, time)
   
-  for(i in 1:length(res)){
+  for(i in res){
     data1 <- data %>%
-      filter(icao24 == res[i])
+      filter(icao24 == i)
     j <- nrow(data1)
     while(j >= 1){
-      if(data1[j,"onground"] == "True" & data1[j,"distance"] > .25){
+      if(data1[j,"onground"] == "True" && data1[j,"distance"] > .25){
         first_time <- as.numeric(as.character(data1[j,"time"]))
         j <- 0
       } else{
@@ -254,7 +236,7 @@ makeData2 <- function(lat,lon,startTime){
         j <- j - 1
       }
     }
-    data <- data[!(as.character(data$icao24) == res[i] & as.numeric(as.character(data$time)) <= first_time),]
+    data <- data[!(as.character(data$icao24) == i & as.numeric(as.character(data$time)) < first_time),]
   }
   
   #find start time based on smallest distance from RDU
@@ -268,7 +250,7 @@ makeData2 <- function(lat,lon,startTime){
       filter(distance == mindistance) %>%
       arrange(time)
     start[i,1] <- j
-    start[i,2] <- data1[1,"time"]
+    start[i,2] <- data1[1,1]
     i <- i + 1
   }
   colnames(start) <- c("icao24","starttime")
@@ -416,18 +398,7 @@ makeCluster <- function(data) {
   }
   
   #re-define res
-  list <- data[,"icao24"]
-  res <- c()
-  i = 1
-  for (j in list){ 
-    if (j %in% res){ 
-    }
-    else{
-      res[i] <- j
-      i <- i + 1
-    }
-  }
-  
+  res <- unique(data[,"icao24"])
   res <- sort(res)
   
   #find average distance from each mean function
@@ -588,6 +559,7 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     everything2 <- makeCluster(data.frame(everything[1]))
     fun1 <- data.frame(everything[2])
     fun2 <- data.frame(everything2[2])
+    threshold = 1
     j = 0
     while(compareMean(fun1,fun2,threshold) == "False" && j <= 5){
       fun1 <- fun2
@@ -722,7 +694,7 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
     ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
     geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
   
-  finalAnswer <- list(CF, totalData, plot1, plot2)
+  finalAnswer <- list(CF, totalData[,1:4], plot1, plot2)
   
   return(finalAnswer)
 }
@@ -812,3 +784,6 @@ ggplot(fun, aes(lon, lat, color = factor(group))) +
   ggtitle("Flights Arriving into RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
+abb <- data1 %>%
+  filter(icao24 == "abb3b6")
+min(abb$distance)
