@@ -39,7 +39,7 @@ makeData <- function(lat,lon,startTime){
   
   data <- cbind(data, distance)
   
-  #make list of ids that pass through airport of interest (1 degree buffer)
+  #make list of ids that pass through airport of interest (.25 degree buffer)
   list = c()
   i = 1
   for (row in 1:nrow(data)){
@@ -589,7 +589,7 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     fun1 <- data.frame(everything[2])
     fun2 <- data.frame(everything2[2])
     j = 0
-    while(compareMean(fun1,fun2,threshold) == "False" || j <= 10){
+    while(compareMean(fun1,fun2,threshold) == "False" && j <= 5){
       fun1 <- fun2
       flight_info1 <- everything2[1]
       everything2 <- makeCluster(data.frame(everything2[1]))
@@ -647,8 +647,8 @@ totalPath <- function(df1,df2,lat,lon){
   #which path from ending airport gets closest to the point above
   fun1 <- df2 %>%
     filter(group == min(df2$group))
-  lon1 <- fun[info[2],3]
-  lat1 <- fun[info[2],4]
+  lon1 <- fun[info[2],"lon"]
+  lat1 <- fun[info[2],"lat"]
   info1 <- closest_path(fun1,lat1,lon1)
   for(n in min(df2$group):max(df2$group)){
     fun2 <- df2 %>%
@@ -666,7 +666,7 @@ totalPath <- function(df1,df2,lat,lon){
     arrange(desc(tz))
   
   for(r in 1:nrow(fun1)){
-    fun1[r,2] <- info[2]+r
+    fun1[r,"tz"] <- info[2]+r
   }
   
   route <- rbind(fun,fun1)
@@ -679,14 +679,10 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
   airport_data <- airport_data[,-1]
   df1 <- airport_data %>%
     filter(airport == starting_airport & time_of_day == startingTime & arrive_depart == "depart")
-  df1 <- df1[,-5]
-  df1 <- df1[,-5]
   
   df2 <- airport_data %>%
     filter(airport == ending_airport & time_of_day == startingTime & arrive_depart == "arrive")
-  df2 <- df2[,-5]
-  df2 <- df2[,-5]
-  
+
   numclusters <- length(unique(df1$group))
   
   for(i in 1:nrow(df2)){
@@ -806,3 +802,13 @@ RDU_arrive_afternoon_clusters <- ggplot(afternoon_fun, aes(lon, lat,color = fact
   ggtitle("Flights Arriving into RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 RDU_arrive_afternoon_clusters
+
+
+ggplot(data, aes(lon, lat, group = factor(icao24),color = factor(group))) +  
+  ggtitle("Flights Arriving into RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
+ggplot(fun, aes(lon, lat, color = factor(group))) +  
+  ggtitle("Flights Arriving into RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
