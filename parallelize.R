@@ -717,10 +717,20 @@ write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
 
 MIA_arrive <- combineData(25.7617,-80.1918,"arrive",1)
-write.csv(MIA_arrive,"thesis2021//MIA_arrive_karlee.csv")
+MIA_arrive_info <- cbind(MIA_arrive[[2]],airport = "MIA",arrive_depart = "arrive")
+MIA_arrive_fun <- cbind(MIA_arrive[[1]],airport = "MIA",arrive_depart = "arrive")
+write.csv(MIA_arrive_info,"thesis2021//contributing_flight_routes_karlee.csv")
+write.csv(MIA_arrive_fun ,"thesis2021//cluster_functions_karlee.csv")
 
 MIA_depart <- combineData(25.7617,-80.1918,"depart",1)
-write.csv(MIA_depart,"thesis2021//MIA_depart_karlee.csv")
+MIA_depart_info <- cbind(MIA_depart[[2]],airport = "MIA",arrive_depart = "depart")
+MIA_depart_fun <- cbind(MIA_depart[[1]],airport = "MIA",arrive_depart = "depart")
+info <- read.csv("thesis2021//contributing_flight_routes_karlee.csv")
+clusters <- read.csv("thesis2021//cluster_functions_karlee.csv")
+info <- rbind(info,MIA_depart_info)
+clusters <- rbind(clusters,MIA_depart_fun)
+write.csv(info,"thesis2021//contributing_flight_routes_karlee.csv")
+write.csv(clusters,"thesis2021//cluster_functions_karlee.csv")
 
 CHI_arrive <- combineData(41.978611, -87.904724,"arrive",1)
 write.csv(CHI_arrive,"thesis2021//CHI_arrive_karlee.csv")
@@ -782,4 +792,18 @@ RDU_arrive_afternoon_clusters <- ggplot(afternoon_fun, aes(lon, lat,color = fact
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 RDU_arrive_afternoon_clusters
 
-View(everything[1])
+MIA_night <- MIA_arrive[[2]] %>%
+  filter(time_of_day == 0)
+
+MIA_night_fun <- MIA_arrive[[1]] %>%
+  filter(time_of_day == 0)
+
+
+ggplot(MIA_night, aes(lon, lat,group = factor(icao24), color = factor(group))) +  
+  ggtitle("Flight Routes that Contribute to the Cluster Routes") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2) + theme(legend.position = "none")
+
+ggplot(MIA_night_fun, aes(lon, lat,color = factor(group))) +  
+  ggtitle("Flights Arriving into MIA") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+
