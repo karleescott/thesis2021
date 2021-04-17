@@ -162,7 +162,7 @@ makeData <- function(lat,lon,startTime){
   i = 1
   for(r in 1:nrow(data)){
     if(as.character(data[r,"icao24"]) == as.character(fundata[i,"icao24"])){
-      group[r] <- fundata[i,"icao24"]
+      group[r] <- fundata[i,"group"]
     }
     else{
       i <- i + 1
@@ -378,8 +378,6 @@ makeCluster <- function(data) {
   for(n in 1:numclusters){
     data1 <- fun_data %>%
       filter(group == n)
-    print(n)
-    print(max(data1$tz))
     for(i in 1:max(data1$tz)){
       data2 <- data1 %>%
         filter(tz == i)
