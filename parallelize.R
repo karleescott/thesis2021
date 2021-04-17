@@ -364,6 +364,12 @@ makeCluster <- function(data) {
     fun_data <- data[!(data$group==n & data$tz>=cap),]
   }
   
+  numclusters <- as.numeric(length(unique(fun_data$group)))
+  groups <- sort(unique(fun_data$group))
+  for(r in 1:nrow(fun_data)){
+    fun_data[r,"group"] <- match(fun_data[r,"group"],groups)
+  }
+  
   #create mean functions
   fun <- data.frame()
   fun_data <- fun_data %>%
@@ -372,6 +378,8 @@ makeCluster <- function(data) {
   for(n in 1:numclusters){
     data1 <- fun_data %>%
       filter(group == n)
+    print(n)
+    print(max(data1$tz))
     for(i in 1:max(data1$tz)){
       data2 <- data1 %>%
         filter(tz == i)
@@ -404,17 +412,7 @@ makeCluster <- function(data) {
   }
   
   #re-define res
-  list <- data[,"icao24"]
-  res <- c()
-  i = 1
-  for (j in list){ 
-    if (j %in% res){ 
-    }
-    else{
-      res[i] <- j
-      i <- i + 1
-    }
-  }
+  res <- unique(data[,"icao24"])
   
   res <- sort(res)
   
@@ -570,9 +568,6 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     if(arrive_depart == "depart"){
       data1 <- makeData(lat,lon,i)}
     else{
-      lat <- 25.7617
-      lon <- -80.1918
-      i <- 1
       data1 <- makeData2(lat,lon,i)
     }
     everything <- makeCluster(data1)
@@ -786,3 +781,5 @@ RDU_arrive_afternoon_clusters <- ggplot(afternoon_fun, aes(lon, lat,color = fact
   ggtitle("Flights Arriving into RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 RDU_arrive_afternoon_clusters
+
+View(everything[1])
