@@ -745,7 +745,17 @@ write.csv(info,"thesis2021//contributing_flight_routes_karlee.csv")
 write.csv(clusters,"thesis2021//cluster_functions_karlee.csv")
 
 CHI_depart <- combineData(41.978611, -87.904724,"depart",1)
-write.csv(CHI_depart,"thesis2021//CHI_depart_karlee.csv")
+CHI_depart_info <- cbind(CHI_depart[[2]],airport = "CHI",arrive_depart = "depart")
+CHI_depart_fun <- cbind(CHI_depart[[1]],airport = "CHI",arrive_depart = "depart")
+info <- read.csv("/lfs/karlee_contributing_flight_routes.csv")
+info <- info[,-1]
+clusters <- read.csv("/lfs/karlee_cluster_functions.csv")
+clusters <- clusters[,-1]
+info <- rbind(info,CHI_depart_info)
+clusters <- rbind(clusters,CHI_depart_fun)
+write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
+write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
+
 
 write.csv(CHI_depart[[1]],"thesis2021//CHI_depart_karlee.csv")
 write.csv(CHI_depart[[2]],"thesis2021//CHI_depart_flights_karlee.csv")
