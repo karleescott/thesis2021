@@ -756,60 +756,18 @@ clusters <- rbind(clusters,CHI_depart_fun)
 write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
 write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
 
-
-write.csv(CHI_depart[[1]],"thesis2021//CHI_depart_karlee.csv")
-write.csv(CHI_depart[[2]],"thesis2021//CHI_depart_flights_karlee.csv")
-
 RDU_arrive <- combineData(35.8801,-78.7880,"arrive",1)
-View(RDU_arrive[[2]])
+RDU_arrive_info <- cbind(RDU_arrive[[2]],airport = "RDU",arrive_depart = "arrive")
+RDU_arrive_fun <- cbind(RDU_arrive[[1]],airport = "RDU",arrive_depart = "arrive")
+info <- read.csv("/lfs/karlee_contributing_flight_routes.csv")
+info <- info[,-1]
+clusters <- read.csv("/lfs/karlee_cluster_functions.csv")
+clusters <- clusters[,-1]
+info <- rbind(info,RDU_arrive_info)
+clusters <- rbind(clusters,RDU_arrive_fun)
+write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
+write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
 
-write.csv(RDU_arrive[[1]],"thesis2021//RDU_arrive_karlee.csv")
-write.csv(RDU_arrive[[2]],"thesis2021//RDU_arrive_flights_karlee.csv")
-
-night <- RDU_arrive[[2]] %>%
-  filter(time_of_day == 0)
-
-night_fun <- RDU_arrive[[1]] %>%
-  filter(time_of_day == 0)
-
-colnames(night)
-RDU_arrive_night_flights_grouped <- ggplot(night, aes(lon, lat,group = factor(icao24), color = factor(group))) +  
-  ggtitle("Flight Routes that Contribute to the 4 Cluster Routes") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2) + theme(legend.position = "none")
-
-RDU_arrive_night_clusters <- ggplot(night_fun, aes(lon, lat,color = factor(group))) +  
-  ggtitle("Flights Arriving into RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
-
-morning <- RDU_arrive[[2]] %>%
-  filter(time_of_day == 1)
-
-morning_fun <- RDU_arrive[[1]] %>%
-  filter(time_of_day == 1)
-
-RDU_arrive_morning_flights_grouped <- ggplot(morning, aes(lon, lat,group = factor(icao24), color = factor(group))) +  
-  ggtitle("Flight Routes that Contribute to the 4 Cluster Routes") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2) + theme(legend.position = "none")
-RDU_arrive_morning_flights_grouped
-RDU_arrive_morning_clusters <- ggplot(morning_fun, aes(lon, lat,color = factor(group))) +  
-  ggtitle("Flights Arriving into RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
-RDU_arrive_morning_clusters
-
-afternoon <- RDU_arrive[[2]] %>%
-  filter(time_of_day == 2)
-
-afternoon_fun <- RDU_arrive[[1]] %>%
-  filter(time_of_day == 2)
-
-RDU_arrive_afternoon_flights_grouped <- ggplot(afternoon, aes(lon, lat,group = factor(icao24), color = factor(group))) +  
-  ggtitle("Flight Routes that Contribute to the 4 Cluster Routes") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2) + theme(legend.position = "none")
-RDU_arrive_afternoon_flights_grouped
-RDU_arrive_afternoon_clusters <- ggplot(afternoon_fun, aes(lon, lat,color = factor(group))) +  
-  ggtitle("Flights Arriving into RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
-RDU_arrive_afternoon_clusters
 
 MIA_night <- MIA_arrive[[2]] %>%
   filter(time_of_day == 0)
