@@ -13,9 +13,9 @@ usdata <- read.csv("/lfs/karlee_combined_data.csv")
 
 #makes the data to be used in total Function. startTime is the hour of day (0-23)
 makeData <- function(lat,lon,startTime){ 
-  #lat <- 35.8801
-  #lon <- -78.7880
-  #startTime <- 0
+  lat <- 35.8801
+  lon <- -78.7880
+  startTime <- 0
   print(startTime)
   
   #filters the data's time to startTime provided by the user: 0(night) = 0000-0600, 1(morning) = 0600-1200, 2(afternoon) = 1200-1800, 3(evening) = 1800-0000
@@ -353,6 +353,7 @@ makeCluster <- function(data) {
   }
   
   #Must have at least 5 flights contributing to each point (tz) in mean function
+  full_fun_data <- data.frame()
   for(n in 1:numclusters){
     data1 <- data %>%
       filter(group == n)
@@ -361,9 +362,14 @@ makeCluster <- function(data) {
     tz_count <- tz_count %>%
       filter(Freq < 5)
     cap <- as.numeric(as.character(tz_count[1,1]))
-    fun_data <- data[!(data$group==n & data$tz>=cap),]
+    print(n)
+    print(cap)
+    fun_data <- data %>%
+      filter(group == n & tz < cap)
+    full_fun_data <- rbind(full_fun_data,fun_data)
   }
   
+  fun_data <- full_fun_data
   numclusters <- as.numeric(length(unique(fun_data$group)))
   groups <- sort(unique(fun_data$group))
   for(r in 1:nrow(fun_data)){
@@ -493,7 +499,7 @@ makeCluster <- function(data) {
   }
   data[,data_length] <- group
   data <- data[,1:data_length]
-  everything <- list(data, fun, sd, likelihoods)
+  everything <- list(data, fun, sd, likelihoods, fun_data)
   return(everything)
 }
 
@@ -572,11 +578,12 @@ combineData <- function(lat,lon,arrive_depart,threshold){
     everything2 <- makeCluster(data.frame(everything[1]))
     fun1 <- data.frame(everything[2])
     fun2 <- data.frame(everything2[2])
+    flight_info1 <- everything2[5]
     j = 0
     while(compareMean(fun1,fun2,threshold) == "False" && j <= 5){
       fun1 <- fun2
-      flight_info1 <- everything2[1]
       everything2 <- makeCluster(data.frame(everything2[1]))
+      flight_info1 <- everything2[5]
       fun2 <- data.frame(everything2[2])
       j <- j + 1
     }
@@ -768,19 +775,33 @@ clusters <- rbind(clusters,RDU_arrive_fun)
 write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
 write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
 
+RDU_depart <- combineData(35.8801,-78.7880,"depart",1)
+RDU_depart_info <- cbind(RDU_depart[[2]],airport = "RDU",arrive_depart = "depart")
+RDU_depart_fun <- cbind(RDU_depart[[1]],airport = "RDU",arrive_depart = "depart")
+info <- read.csv("/lfs/karlee_contributing_flight_routes.csv")
+info <- info[,-1]
+clusters <- read.csv("/lfs/karlee_cluster_functions.csv")
+clusters <- clusters[,-1]
+info <- rbind(info,RDU_depart_info)
+clusters <- rbind(clusters,RDU_depart_fun)
+write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
+write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
 
-MIA_night <- MIA_arrive[[2]] %>%
+write.csv(RDU_depart_info,"/lfs/karlee_contributing_flight_routes.csv")
+write.csv(RDU_depart_fun,"/lfs/karlee_cluster_functions.csv")
+
+RDU_night2 <- RDU_depart[[2]] %>%
   filter(time_of_day == 0)
 
-MIA_night_fun <- MIA_arrive[[1]] %>%
+RDU_night_fun2 <- RDU_depart[[1]] %>%
   filter(time_of_day == 0)
 
 
-ggplot(MIA_night, aes(lon, lat,group = factor(icao24), color = factor(group))) +  
+ggplot(RDU_night2, aes(lon, lat,group = factor(icao24), color = factor(group))) +  
   ggtitle("Flight Routes that Contribute to the Cluster Routes") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2) + theme(legend.position = "none")
 
-ggplot(MIA_night_fun, aes(lon, lat,color = factor(group))) +  
-  ggtitle("Flights Arriving into MIA") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+ggplot(RDU_night_fun2, aes(lon, lat,color = factor(group))) +  
+  ggtitle("Flights departing from  RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
