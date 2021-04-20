@@ -779,6 +779,6 @@ ggplot(CHI_night, aes(lon, lat,group = factor(icao24), color = factor(group))) +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
 ggplot(CHI_night_fun, aes(lon, lat,color = factor(group))) +  
-  ggtitle("Flights departing from  CHI") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+  ggtitle("Flights Departing from CHI at Night") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
