@@ -767,18 +767,18 @@ write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
 info1 <- read.csv("/lfs/karlee_contributing_flight_routes.csv")
 clusters1 <- read.csv("/lfs/karlee_cluster_functions.csv")
 
-RDU_night2 <- RDU_depart[[2]] %>%
+CHI_night <- CHI_depart[[2]] %>%
   filter(time_of_day == 0)
 
-RDU_night_fun2 <- RDU_depart[[1]] %>%
+CHI_night_fun <- CHI_depart[[1]] %>%
   filter(time_of_day == 0)
 
 
-ggplot(RDU_night2, aes(lon, lat,group = factor(icao24), color = factor(group))) +  
+ggplot(CHI_night, aes(lon, lat,group = factor(icao24), color = factor(group))) +  
   ggtitle("Flight Routes that Contribute to the Cluster Routes") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2) + theme(legend.position = "none")
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
-ggplot(RDU_night_fun2, aes(lon, lat,color = factor(group))) +  
-  ggtitle("Flights departing from  RDU") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+ggplot(CHI_night_fun, aes(lon, lat,color = factor(group))) +  
+  ggtitle("Flights departing from  CHI") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
   geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
