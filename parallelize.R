@@ -764,6 +764,9 @@ clusters <- rbind(clusters,RDU_depart_fun)
 write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
 write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
 
+info1 <- read.csv("/lfs/karlee_contributing_flight_routes.csv")
+clusters1 <- read.csv("/lfs/karlee_cluster_functions.csv")
+
 RDU_night2 <- RDU_depart[[2]] %>%
   filter(time_of_day == 0)
 
