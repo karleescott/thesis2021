@@ -13,9 +13,6 @@ usdata <- read.csv("/lfs/karlee_combined_data.csv")
 
 #makes the data to be used in total Function. startTime is the hour of day (0-23)
 makeData <- function(lat,lon,startTime){ 
-  lat <- 35.8801
-  lon <- -78.7880
-  startTime <- 0
   print(startTime)
   
   #filters the data's time to startTime provided by the user: 0(night) = 0000-0600, 1(morning) = 0600-1200, 2(afternoon) = 1200-1800, 3(evening) = 1800-0000
@@ -724,40 +721,28 @@ write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 MIA_arrive <- combineData(25.7617,-80.1918,"arrive",1)
 MIA_arrive_info <- cbind(MIA_arrive[[2]],airport = "MIA",arrive_depart = "arrive")
 MIA_arrive_fun <- cbind(MIA_arrive[[1]],airport = "MIA",arrive_depart = "arrive")
-write.csv(MIA_arrive_info,"thesis2021//contributing_flight_routes_karlee.csv")
-write.csv(MIA_arrive_fun ,"thesis2021//cluster_functions_karlee.csv")
+write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
+write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
 
 MIA_depart <- combineData(25.7617,-80.1918,"depart",1)
 MIA_depart_info <- cbind(MIA_depart[[2]],airport = "MIA",arrive_depart = "depart")
 MIA_depart_fun <- cbind(MIA_depart[[1]],airport = "MIA",arrive_depart = "depart")
-info <- read.csv("thesis2021//contributing_flight_routes_karlee.csv")
-info <- info[,-1]
-clusters <- read.csv("thesis2021//cluster_functions_karlee.csv")
-clusters <- clusters[,-1]
 info <- rbind(info,MIA_depart_info)
 clusters <- rbind(clusters,MIA_depart_fun)
-write.csv(info,"thesis2021//contributing_flight_routes_karlee.csv")
-write.csv(clusters,"thesis2021//cluster_functions_karlee.csv")
+write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
+write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
 
 CHI_arrive <- combineData(41.978611, -87.904724,"arrive",1)
 CHI_arrive_info <- cbind(CHI_arrive[[2]],airport = "CHI",arrive_depart = "arrive")
 CHI_arrive_fun <- cbind(CHI_arrive[[1]],airport = "CHI",arrive_depart = "arrive")
-info <- read.csv("thesis2021//contributing_flight_routes_karlee.csv")
-info <- info[,-1]
-clusters <- read.csv("thesis2021//cluster_functions_karlee.csv")
-clusters <- clusters[,-1]
 info <- rbind(info,CHI_arrive_info)
 clusters <- rbind(clusters,CHI_arrive_fun)
-write.csv(info,"thesis2021//contributing_flight_routes_karlee.csv")
-write.csv(clusters,"thesis2021//cluster_functions_karlee.csv")
+write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
+write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
 
 CHI_depart <- combineData(41.978611, -87.904724,"depart",1)
 CHI_depart_info <- cbind(CHI_depart[[2]],airport = "CHI",arrive_depart = "depart")
 CHI_depart_fun <- cbind(CHI_depart[[1]],airport = "CHI",arrive_depart = "depart")
-info <- read.csv("/lfs/karlee_contributing_flight_routes.csv")
-info <- info[,-1]
-clusters <- read.csv("/lfs/karlee_cluster_functions.csv")
-clusters <- clusters[,-1]
 info <- rbind(info,CHI_depart_info)
 clusters <- rbind(clusters,CHI_depart_fun)
 write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
@@ -766,10 +751,6 @@ write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
 RDU_arrive <- combineData(35.8801,-78.7880,"arrive",1)
 RDU_arrive_info <- cbind(RDU_arrive[[2]],airport = "RDU",arrive_depart = "arrive")
 RDU_arrive_fun <- cbind(RDU_arrive[[1]],airport = "RDU",arrive_depart = "arrive")
-info <- read.csv("/lfs/karlee_contributing_flight_routes.csv")
-info <- info[,-1]
-clusters <- read.csv("/lfs/karlee_cluster_functions.csv")
-clusters <- clusters[,-1]
 info <- rbind(info,RDU_arrive_info)
 clusters <- rbind(clusters,RDU_arrive_fun)
 write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
@@ -778,17 +759,10 @@ write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
 RDU_depart <- combineData(35.8801,-78.7880,"depart",1)
 RDU_depart_info <- cbind(RDU_depart[[2]],airport = "RDU",arrive_depart = "depart")
 RDU_depart_fun <- cbind(RDU_depart[[1]],airport = "RDU",arrive_depart = "depart")
-info <- read.csv("/lfs/karlee_contributing_flight_routes.csv")
-info <- info[,-1]
-clusters <- read.csv("/lfs/karlee_cluster_functions.csv")
-clusters <- clusters[,-1]
 info <- rbind(info,RDU_depart_info)
 clusters <- rbind(clusters,RDU_depart_fun)
 write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
 write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
-
-write.csv(RDU_depart_info,"/lfs/karlee_contributing_flight_routes.csv")
-write.csv(RDU_depart_fun,"/lfs/karlee_cluster_functions.csv")
 
 RDU_night2 <- RDU_depart[[2]] %>%
   filter(time_of_day == 0)
