@@ -21,13 +21,14 @@ if (interactive()) {
     }
     
     totalPath <- function(df1,df2,lat,lon){
-      
       #which path from starting airport gets closest to end airport
-      numclusters <- max(df1$group)
-      fun <- df1 %>%
-        filter(group == 1)
-      info <- closest_path(fun,lat,lon)
-      for(n in 2:numclusters){
+      numclusters <- as.numeric(length(unique(df1$group)))
+      groups <- sort(unique(df1$group))
+      for(r in 1:nrow(df1)){
+        df1[r,"group"] <- match(df1[r,"group"],groups)
+      }
+      info <- c(1000,1)
+      for(n in 1:numclusters){
         fun1 <- df1 %>%
           filter(group == n)
         info1 <- closest_path(fun1,lat,lon)
@@ -38,12 +39,15 @@ if (interactive()) {
       }
       
       #which path from ending airport gets closest to the point above
-      fun1 <- df2 %>%
-        filter(group == min(df2$group))
+      numclusters <- as.numeric(length(unique(df2$group)))
+      groups <- sort(unique(df2$group))
+      for(r in 1:nrow(df2)){
+        df2[r,"group"] <- match(df2[r,"group"],groups)
+      }
       lon1 <- fun[info[2],3]
       lat1 <- fun[info[2],4]
-      info1 <- closest_path(fun1,lat1,lon1)
-      for(n in min(df2$group):max(df2$group)){
+      info1 <- c(1000,1)
+      for(n in 1:numclusters){
         fun2 <- df2 %>%
           filter(group == n)
         info2 <- closest_path(fun2,lat1,lon1)
@@ -68,17 +72,13 @@ if (interactive()) {
     
     #returns full data of all routes, returns data with "best route", returns plots of all routes and best route
     totalFunction <- function(starting_airport,ending_airport,startingTime){
-      airport_data <- read.csv("thesis2021//airport_data_karlee.csv")
+      airport_data <- read.csv("/lfs/karlee_cluster_functions.csv")
       airport_data <- airport_data[,-1]
       df1 <- airport_data %>%
         filter(airport == starting_airport & time_of_day == startingTime & arrive_depart == "depart")
-      df1 <- df1[,-5]
-      df1 <- df1[,-5]
       
       df2 <- airport_data %>%
         filter(airport == ending_airport & time_of_day == startingTime & arrive_depart == "arrive")
-      df2 <- df2[,-5]
-      df2 <- df2[,-5]
       
       numclusters <- length(unique(df1$group))
       
@@ -105,6 +105,7 @@ if (interactive()) {
       plot1 <- ggplot(data.frame(totalData), aes(lon, lat, color= factor(group))) +  
         ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
         geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+      plot1$labels$colour = "Cluster"
       
       location <- read.csv("thesis2021//location_data_karlee.csv")
       location <- location[,-1]
@@ -118,8 +119,9 @@ if (interactive()) {
       plot2 <- ggplot(CF, aes(lon, lat, color= factor(group))) +  
         ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
         geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+      plot2$labels$colour = "Cluster"
       
-      finalAnswer <- list(CF, totalData, plot1, plot2)
+      finalAnswer <- list(CF, totalData[,c("group","tz","lat","lon")], plot1, plot2)
       
       return(finalAnswer)
     }
@@ -199,8 +201,7 @@ if (interactive()) {
       }
       finalAnswer <- totalFunction(input$starting_airport,input$ending_airport,time_of_day)
       route <- as.data.frame(finalAnswer[1])
-      route <- route[,-1]
-      route <- route[,-4]
+      route <- route[,2:4]
       colnames(route) <- c("Order of Travel","Longitude","Latitude")
       return(route)
     })

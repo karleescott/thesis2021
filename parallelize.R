@@ -616,13 +616,14 @@ closest_path <- function(fun,lat,lon){
 }
 
 totalPath <- function(df1,df2,lat,lon){
-  
   #which path from starting airport gets closest to end airport
-  numclusters <- max(df1$group)
-  fun <- df1 %>%
-    filter(group == 1)
-  info <- closest_path(fun,lat,lon)
-  for(n in 2:numclusters){
+  numclusters <- as.numeric(length(unique(df1$group)))
+  groups <- sort(unique(df1$group))
+  for(r in 1:nrow(df1)){
+    df1[r,"group"] <- match(df1[r,"group"],groups)
+  }
+  info <- c(1000,1)
+  for(n in 1:numclusters){
     fun1 <- df1 %>%
       filter(group == n)
     info1 <- closest_path(fun1,lat,lon)
@@ -633,12 +634,15 @@ totalPath <- function(df1,df2,lat,lon){
   }
   
   #which path from ending airport gets closest to the point above
-  fun1 <- df2 %>%
-    filter(group == min(df2$group))
+  numclusters <- as.numeric(length(unique(df2$group)))
+  groups <- sort(unique(df2$group))
+  for(r in 1:nrow(df2)){
+    df2[r,"group"] <- match(df2[r,"group"],groups)
+  }
   lon1 <- fun[info[2],3]
   lat1 <- fun[info[2],4]
-  info1 <- closest_path(fun1,lat1,lon1)
-  for(n in min(df2$group):max(df2$group)){
+  info1 <- c(1000,1)
+  for(n in 1:numclusters){
     fun2 <- df2 %>%
       filter(group == n)
     info2 <- closest_path(fun2,lat1,lon1)
@@ -649,7 +653,7 @@ totalPath <- function(df1,df2,lat,lon){
   }
   
   fun <- fun[1:info[2],]
-  fun1 <- fun1[1:info[2],]
+  fun1 <- fun1[1:info1[2],]
   fun1 <- fun1 %>%
     arrange(desc(tz))
   
@@ -662,8 +666,8 @@ totalPath <- function(df1,df2,lat,lon){
 }
 
 #returns full data of all routes, returns data with "best route", returns plots of all routes and best route
-totalFunction <- function(starting_airport,ending_airport,startingTime,threshold){
-  airport_data <- read.csv("thesis2021//airport_data_karlee.csv")
+totalFunction <- function(starting_airport,ending_airport,startingTime){
+  airport_data <- read.csv("/lfs/karlee_cluster_functions.csv")
   airport_data <- airport_data[,-1]
   df1 <- airport_data %>%
     filter(airport == starting_airport & time_of_day == startingTime & arrive_depart == "depart")
@@ -696,6 +700,7 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
   plot1 <- ggplot(data.frame(totalData), aes(lon, lat, color= factor(group))) +  
     ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
     geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+  plot1$labels$colour = "Cluster"
   
   location <- read.csv("thesis2021//location_data_karlee.csv")
   location <- location[,-1]
@@ -709,6 +714,7 @@ totalFunction <- function(starting_airport,ending_airport,startingTime,threshold
   plot2 <- ggplot(CF, aes(lon, lat, color= factor(group))) +  
     ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
     geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+  plot2$labels$colour = "Cluster"
   
   finalAnswer <- list(CF, totalData[,c("group","tz","lat","lon")], plot1, plot2)
   
@@ -719,8 +725,8 @@ write.csv(airport_data,"thesis2021//airport_data_karlee.csv")
 
 
 MIA_arrive <- combineData(25.7617,-80.1918,"arrive",1)
-MIA_arrive_info <- cbind(MIA_arrive[[2]],airport = "MIA",arrive_depart = "arrive")
-MIA_arrive_fun <- cbind(MIA_arrive[[1]],airport = "MIA",arrive_depart = "arrive")
+info <- cbind(MIA_arrive[[2]],airport = "MIA",arrive_depart = "arrive")
+clusters <- cbind(MIA_arrive[[1]],airport = "MIA",arrive_depart = "arrive")
 write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
 write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
 
@@ -763,22 +769,4 @@ info <- rbind(info,RDU_depart_info)
 clusters <- rbind(clusters,RDU_depart_fun)
 write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
 write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
-
-info1 <- read.csv("/lfs/karlee_contributing_flight_routes.csv")
-clusters1 <- read.csv("/lfs/karlee_cluster_functions.csv")
-
-CHI_night <- CHI_depart[[2]] %>%
-  filter(time_of_day == 0)
-
-CHI_night_fun <- CHI_depart[[1]] %>%
-  filter(time_of_day == 0)
-
-
-ggplot(CHI_night, aes(lon, lat,group = factor(icao24), color = factor(group))) +  
-  ggtitle("Flight Routes that Contribute to the Cluster Routes") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
-
-ggplot(CHI_night_fun, aes(lon, lat,color = factor(group))) +  
-  ggtitle("Flights Departing from CHI at Night") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
-  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
 
