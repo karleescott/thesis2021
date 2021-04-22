@@ -698,7 +698,7 @@ totalFunction <- function(starting_airport,ending_airport,startingTime){
   conversion <- fortify(out)
   
   plot1 <- ggplot(data.frame(totalData), aes(lon, lat, color= factor(group))) +  
-    ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+    ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path(size = 1) +
     geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
   plot1$labels$colour = "Cluster"
   
@@ -712,7 +712,7 @@ totalFunction <- function(starting_airport,ending_airport,startingTime){
   CF <- data.frame(totalPath(df1,df2,lat,lon))
   
   plot2 <- ggplot(CF, aes(lon, lat, color= factor(group))) +  
-    ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+    ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path(size = 1) +
     geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
   plot2$labels$colour = "Cluster"
   
@@ -770,3 +770,32 @@ clusters <- rbind(clusters,RDU_depart_fun)
 write.csv(info,"/lfs/karlee_contributing_flight_routes.csv")
 write.csv(clusters,"/lfs/karlee_cluster_functions.csv")
 
+cluster <- read.csv('/lfs/karlee_cluster_functions.csv')
+CHI_depart_night <- cluster %>%
+  filter(airport=="CHI", arrive_depart=="depart", time_of_day==0)
+# unzip the zipfile
+unzip(zipfile = "thesis2021/states_21basic.zip", 
+      exdir = 'states_21basic')
+
+# load the shapefile 
+map <- readOGR("states_21basic/states.shp")
+
+#crop the portion needed
+out <- crop(map, extent(-125, -65, 25, 50))
+
+conversion <- fortify(out)
+
+plot1 <- ggplot(CHI_depart_night, aes(lon, lat, color= factor(group))) +  
+  ggtitle("Mean Cluster Functions Departing CHI at Night") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path(size = 1) +
+  geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
+plot1$labels$colour = "Cluster"
+plot1
+
+hi <- totalFunction("MIA","CHI",3)
+plot <- hi[[3]]
+plot$labels$title = "MIA to CHI in the Evening"
+plot
+
+plot <- hi[[4]]
+plot$labels$title = "MIA to CHI in the Evening"
+plot
