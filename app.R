@@ -103,7 +103,7 @@ if (interactive()) {
       conversion <- fortify(out)
       
       plot1 <- ggplot(data.frame(totalData), aes(lon, lat, color= factor(group))) +  
-        ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+        ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path(size = 1) +
         geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
       plot1$labels$colour = "Cluster"
       
@@ -117,7 +117,7 @@ if (interactive()) {
       CF <- data.frame(totalPath(df1,df2,lat,lon))
       
       plot2 <- ggplot(CF, aes(lon, lat, color= factor(group))) +  
-        ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path() +
+        ggtitle("Flight Paths") + xlab("Longitude (degrees)") + ylab("Latitude (degrees)") + xlim(-125, - 65) + ylim(25, 50) + geom_path(size = 1) +
         geom_path(data = conversion, aes(x = long, y = lat, group = group), color = 'black', fill = 'white', size = .2)
       plot2$labels$colour = "Cluster"
       
