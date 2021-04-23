@@ -634,15 +634,15 @@ totalPath <- function(df1,df2,lat,lon){
   }
   
   #which path from ending airport gets closest to the point above
-  numclusters <- as.numeric(length(unique(df2$group)))
+  numclusters1 <- as.numeric(length(unique(df2$group)))
   groups <- sort(unique(df2$group))
   for(r in 1:nrow(df2)){
-    df2[r,"group"] <- match(df2[r,"group"],groups)
+    df2[r,"group"] <- match(df2[r,"group"],groups)+numclusters
   }
   lon1 <- fun[info[2],3]
   lat1 <- fun[info[2],4]
   info1 <- c(1000,1)
-  for(n in 1:numclusters){
+  for(n in numclusters+1:numclusters1){
     fun2 <- df2 %>%
       filter(group == n)
     info2 <- closest_path(fun2,lat1,lon1)
@@ -664,6 +664,7 @@ totalPath <- function(df1,df2,lat,lon){
   route <- rbind(fun,fun1)
   return(route)
 }
+
 
 #returns full data of all routes, returns data with "best route", returns plots of all routes and best route
 totalFunction <- function(starting_airport,ending_airport,startingTime){
