@@ -4,7 +4,6 @@ library(tidyverse)
 library(rgdal)
 library(raster)
 library(rgeos)
-library(ggplot2)
 
 if (interactive()) {
   {
