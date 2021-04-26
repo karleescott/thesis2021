@@ -125,7 +125,6 @@ if (interactive()) {
       
       return(finalAnswer)
     }
-    
   }
   
   # Define UI
