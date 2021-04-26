@@ -1,5 +1,4 @@
 library(shiny)
-library(leaflet)
 library(tidyverse)
 library(rgdal)
 library(raster)
